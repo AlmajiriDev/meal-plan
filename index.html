@@ -1,0 +1,1940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0288D1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ulcer Plan">
+<title>Ulcer Recovery Plan</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  
+  :root {
+    --primary: #0288D1;
+    --primary-dark: #01579B;
+    --primary-darker: #0D47A1;
+    --primary-light: #4FC3F7;
+    --primary-lighter: #B3E5FC;
+    --primary-lightest: #E1F5FE;
+    --bg: #F0F9FF;
+    --card: #FFFFFF;
+    --text: #0D47A1;
+    --text-light: #546E7A;
+    --text-muted: #90A4AE;
+    --success: #43A047;
+    --success-light: #C8E6C9;
+    --warning: #FB8C00;
+    --warning-light: #FFE0B2;
+    --danger: #E53935;
+    --danger-light: #FFCDD2;
+    --border: #B3E5FC;
+    --shadow: 0 2px 8px rgba(2, 136, 209, 0.08);
+    --shadow-lg: 0 4px 16px rgba(2, 136, 209, 0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  
+  html, body {
+    height: 100%;
+    overflow-x: hidden;
+  }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+  input, textarea, select { font-family: inherit; }
+  
+  /* ========== ONBOARDING ========== */
+  #onboarding {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    color: white;
+    text-align: center;
+  }
+  
+  #onboarding .logo {
+    font-size: 72px;
+    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  #onboarding h1 {
+    font-size: 28px;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  
+  #onboarding p.tagline {
+    font-size: 16px;
+    opacity: 0.95;
+    margin-bottom: 32px;
+    max-width: 320px;
+  }
+  
+  .onboard-form {
+    background: white;
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 100%;
+    max-width: 360px;
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .onboard-form h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: var(--primary-darker);
+  }
+  
+  .form-group { margin-bottom: 16px; text-align: left; }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 6px;
+  }
+  
+  .form-group input, .form-group textarea, .form-group select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--primary-lighter);
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    color: var(--text);
+    background: white;
+    transition: border-color 0.2s;
+  }
+  
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+  
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    padding: 16px 24px;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 600;
+    width: 100%;
+    transition: all 0.2s;
+  }
+  
+  .btn-primary:active { background: var(--primary-dark); transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  
+  .btn-secondary {
+    background: var(--primary-lightest);
+    color: var(--primary-dark);
+    padding: 14px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+  }
+  
+  .btn-danger {
+    background: var(--danger);
+    color: white;
+    padding: 14px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+  }
+  
+  /* ========== MAIN APP ========== */
+  #app { display: none; min-height: 100vh; padding-bottom: 80px; }
+  #app.active { display: block; }
+  
+  .header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    padding: 20px 20px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: var(--shadow);
+  }
+  
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .greeting {
+    font-size: 14px;
+    opacity: 0.95;
+  }
+  
+  .greeting strong { font-weight: 700; }
+  
+  .header-date {
+    font-size: 13px;
+    opacity: 0.85;
+  }
+  
+  .day-counter {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  
+  .day-counter .day-num {
+    font-size: 36px;
+  }
+  
+  .progress-bar {
+    background: rgba(255,255,255,0.25);
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .progress-fill {
+    background: white;
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+  
+  .progress-text {
+    font-size: 12px;
+    margin-top: 6px;
+    opacity: 0.9;
+  }
+  
+  .motivational {
+    background: rgba(255,255,255,0.15);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    margin-top: 12px;
+    font-size: 13px;
+    font-style: italic;
+  }
+  
+  /* ========== MAIN CONTENT ========== */
+  .content { padding: 16px; }
+  
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--primary-dark);
+    margin: 16px 8px 10px;
+  }
+  
+  /* ========== MEAL CARD ========== */
+  .meal-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    transition: all 0.2s;
+    border-left: 4px solid var(--primary-lighter);
+  }
+  
+  .meal-card.eaten {
+    border-left-color: var(--success);
+    background: linear-gradient(to right, var(--success-light) 0%, white 30%);
+  }
+  
+  .meal-card.eaten .meal-text {
+    text-decoration: line-through;
+    opacity: 0.6;
+  }
+  
+  .meal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  
+  .meal-icon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    background: var(--primary-lightest);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  
+  .meal-info { flex: 1; min-width: 0; }
+  .meal-title { font-size: 15px; font-weight: 700; color: var(--text); }
+  .meal-time { font-size: 12px; color: var(--text-light); }
+  
+  .meal-check {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-lighter);
+    background: white;
+    color: var(--primary);
+    font-size: 20px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  
+  .meal-card.eaten .meal-check {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+  }
+  
+  .meal-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  
+  .meal-alts {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  
+  .alt-btn {
+    background: var(--primary-lightest);
+    color: var(--primary-dark);
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  
+  .alt-btn.active {
+    background: var(--primary);
+    color: white;
+  }
+  
+  .alt-btn:active { transform: scale(0.95); }
+  
+  .meal-alt-content {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: var(--primary-lightest);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--text);
+    display: none;
+  }
+  
+  .meal-alt-content.show { display: block; }
+  .meal-alt-content strong { color: var(--primary-darker); }
+  
+  /* ========== WATER TRACKER ========== */
+  .tracker-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  
+  .tracker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  
+  .tracker-title {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  
+  .tracker-count {
+    font-size: 14px;
+    color: var(--primary-dark);
+    font-weight: 600;
+  }
+  
+  .water-glasses {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+  }
+  
+  .glass {
+    aspect-ratio: 1;
+    background: var(--primary-lightest);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: all 0.2s;
+  }
+  
+  .glass.filled {
+    background: var(--primary);
+    color: white;
+  }
+  
+  /* ========== CHECK-IN ========== */
+  .checkin-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--primary-lightest);
+  }
+  
+  .checkin-row:last-child { border-bottom: none; }
+  
+  .checkin-label {
+    font-size: 14px;
+    color: var(--text);
+    flex: 1;
+  }
+  
+  .slider-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .slider-group input[type="range"] {
+    width: 100px;
+    accent-color: var(--primary);
+  }
+  
+  .slider-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    min-width: 20px;
+    text-align: right;
+  }
+  
+  .checkin-input {
+    padding: 8px 12px;
+    border: 2px solid var(--primary-lighter);
+    border-radius: 8px;
+    font-size: 14px;
+    width: 100px;
+    text-align: center;
+  }
+  
+  .checkin-input:focus { outline: none; border-color: var(--primary); }
+  
+  /* Toggle switch */
+  .toggle {
+    position: relative;
+    width: 50px;
+    height: 28px;
+    background: var(--primary-lighter);
+    border-radius: 14px;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  
+  .toggle.on { background: var(--success); }
+  
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  
+  .toggle.on::after { transform: translateX(22px); }
+  
+  /* ========== NOTES ========== */
+  .notes-area {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    border: 2px solid var(--primary-lighter);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    resize: vertical;
+    background: white;
+  }
+  
+  .notes-area:focus { outline: none; border-color: var(--primary); }
+  
+  /* ========== TABS ========== */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  
+  /* ========== PROGRESS GRID ========== */
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .day-cell {
+    aspect-ratio: 1;
+    background: var(--primary-lightest);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-light);
+    transition: all 0.2s;
+    position: relative;
+  }
+  
+  .day-cell .day-label { font-size: 10px; opacity: 0.7; }
+  .day-cell .day-num { font-size: 16px; font-weight: 700; }
+  
+  .day-cell.complete {
+    background: var(--success);
+    color: white;
+  }
+  
+  .day-cell.partial {
+    background: var(--warning);
+    color: white;
+  }
+  
+  .day-cell.today {
+    border: 3px solid var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-lighter);
+  }
+  
+  .day-cell.missed {
+    background: var(--danger-light);
+    color: var(--danger);
+  }
+  
+  .day-cell.future {
+    opacity: 0.4;
+  }
+  
+  /* ========== STATS CARDS ========== */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  
+  .stat-card {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+  }
+  
+  .stat-card.success { background: linear-gradient(135deg, var(--success) 0%, #66BB6A 100%); }
+  .stat-card.warning { background: linear-gradient(135deg, var(--warning) 0%, #FFA726 100%); }
+  .stat-card.neutral { background: linear-gradient(135deg, #455A64 0%, #607D8B 100%); }
+  
+  .stat-value { font-size: 28px; font-weight: 700; line-height: 1; }
+  .stat-label { font-size: 12px; opacity: 0.9; margin-top: 4px; }
+  
+  /* ========== ACHIEVEMENTS ========== */
+  .achievement {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow);
+    opacity: 0.5;
+  }
+  
+  .achievement.unlocked { opacity: 1; }
+  
+  .achievement.unlocked.gold {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA000 100%);
+    color: white;
+  }
+  
+  .achievement-icon {
+    font-size: 28px;
+    width: 48px;
+    height: 48px;
+    background: var(--primary-lightest);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  
+  .achievement.unlocked .achievement-icon {
+    background: rgba(255,255,255,0.25);
+  }
+  
+  .achievement-text { flex: 1; }
+  .achievement-title { font-size: 14px; font-weight: 700; }
+  .achievement-desc { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+  
+  /* ========== RESOURCES ========== */
+  .resource-section {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  
+  .resource-section h3 {
+    font-size: 15px;
+    margin-bottom: 10px;
+    color: var(--primary-darker);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .resource-list {
+    list-style: none;
+  }
+  
+  .resource-list li {
+    padding: 6px 0;
+    font-size: 14px;
+    color: var(--text);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .resource-list li::before {
+    content: "•";
+    color: var(--primary);
+    font-weight: 700;
+  }
+  
+  .resource-list.danger li::before { content: "✕"; color: var(--danger); }
+  .resource-list.success li::before { content: "✓"; color: var(--success); }
+  
+  .warning-box {
+    background: var(--danger-light);
+    border-left: 4px solid var(--danger);
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    margin: 8px 0;
+  }
+  
+  .warning-box strong { color: var(--danger); display: block; margin-bottom: 4px; }
+  .warning-box p { font-size: 13px; color: var(--text); }
+  
+  /* ========== BOTTOM NAV ========== */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    display: flex;
+    box-shadow: 0 -2px 10px rgba(2, 136, 209, 0.1);
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 20;
+  }
+  
+  .nav-item {
+    flex: 1;
+    padding: 10px 4px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    color: var(--text-muted);
+    transition: color 0.2s;
+    font-size: 11px;
+  }
+  
+  .nav-item .nav-icon { font-size: 22px; }
+  .nav-item.active { color: var(--primary); }
+  
+  .nav-item:active { background: var(--primary-lightest); }
+  
+  /* ========== MODAL ========== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13, 71, 161, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  
+  .modal-overlay.show { display: flex; }
+  
+  .modal {
+    background: white;
+    border-radius: var(--radius);
+    padding: 24px;
+    max-width: 360px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .modal h3 {
+    font-size: 18px;
+    margin-bottom: 12px;
+    color: var(--primary-darker);
+  }
+  
+  .modal p {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+  
+  .modal-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .modal-buttons button { flex: 1; }
+  
+  /* ========== TOAST ========== */
+  .toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--text);
+    color: white;
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    box-shadow: var(--shadow-lg);
+    z-index: 200;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+  }
+  
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  
+  /* ========== WEIGHT CHART ========== */
+  .chart-container {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  
+  .chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 120px;
+    margin-top: 12px;
+  }
+  
+  .chart-bar {
+    flex: 1;
+    background: var(--primary);
+    border-radius: 4px 4px 0 0;
+    min-height: 4px;
+    position: relative;
+    transition: height 0.4s;
+  }
+  
+  .chart-bar-label {
+    position: absolute;
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: var(--text-light);
+    white-space: nowrap;
+  }
+  
+  /* ========== EMPTY STATE ========== */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-light);
+  }
+  
+  .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+  
+  /* ========== CELEBRATION ========== */
+  .confetti {
+    position: fixed;
+    top: -10px;
+    font-size: 24px;
+    animation: fall 3s linear forwards;
+    z-index: 300;
+    pointer-events: none;
+  }
+  
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+  
+  /* ========== SETTINGS ========== */
+  .setting-item {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    text-align: left;
+    transition: all 0.2s;
+  }
+  
+  .setting-item:active { background: var(--primary-lightest); }
+  
+  .setting-icon {
+    font-size: 24px;
+    width: 44px;
+    height: 44px;
+    background: var(--primary-lightest);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  
+  .setting-text { flex: 1; }
+  .setting-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .setting-desc { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+  
+  /* ========== PRINT ========== */
+  @media print {
+    .bottom-nav, .header, .meal-check, .meal-alts { display: none !important; }
+    body { background: white; }
+    .meal-card { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== ONBOARDING ========== -->
+<div id="onboarding">
+  <div class="logo">🌊</div>
+  <h1>Ulcer Recovery Plan</h1>
+  <p class="tagline">Your 30-day companion to healing — built for Nigerian kitchens, designed for your pocket.</p>
+  <div class="onboard-form">
+    <h2>Let's get started</h2>
+    <div class="form-group">
+      <label for="userName">Your name</label>
+      <input type="text" id="userName" placeholder="e.g. Amina" maxlength="30" autocomplete="given-name">
+    </div>
+    <div class="form-group">
+      <label for="startDate">Start date</label>
+      <input type="date" id="startDate">
+    </div>
+    <button class="btn-primary" id="startBtn" onclick="startApp()">Start My 30 Days →</button>
+  </div>
+</div>
+
+<!-- ========== MAIN APP ========== -->
+<div id="app">
+  
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div class="greeting" id="greeting">Good morning, <strong>Friend</strong></div>
+      <div class="header-date" id="headerDate">—</div>
+    </div>
+    <div class="day-counter">
+      Day <span class="day-num" id="dayNum">1</span> of 30
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width: 3.33%"></div>
+    </div>
+    <div class="progress-text" id="progressText">3% complete · 29 days to go</div>
+    <div class="motivational" id="motivational">💙 Healing starts with the first step.</div>
+  </div>
+  
+  <!-- TODAY TAB -->
+  <div class="content tab-content active" id="tab-today">
+    <div class="section-title">Today's Meals</div>
+    <div id="mealsContainer"></div>
+    
+    <div class="section-title">Daily Check-in</div>
+    <div class="tracker-card">
+      <div class="tracker-header">
+        <div class="tracker-title">💧 Water intake</div>
+        <div class="tracker-count" id="waterCount">0 / 8 glasses</div>
+      </div>
+      <div class="water-glasses" id="waterGlasses"></div>
+    </div>
+    
+    <div class="tracker-card">
+      <div class="checkin-row">
+        <div class="checkin-label">⚖️ Weight (kg)</div>
+        <input type="number" step="0.1" class="checkin-input" id="weightInput" placeholder="—">
+      </div>
+      <div class="checkin-row">
+        <div class="checkin-label">😣 Symptoms (0=none, 10=severe)</div>
+        <div class="slider-group">
+          <input type="range" min="0" max="10" value="0" id="symptomsInput">
+          <span class="slider-value" id="symptomsValue">0</span>
+        </div>
+      </div>
+      <div class="checkin-row">
+        <div class="checkin-label">⚡ Energy (0=low, 10=high)</div>
+        <div class="slider-group">
+          <input type="range" min="0" max="10" value="5" id="energyInput">
+          <span class="slider-value" id="energyValue">5</span>
+        </div>
+      </div>
+      <div class="checkin-row">
+        <div class="checkin-label">💊 Took medication today</div>
+        <div class="toggle" id="medsToggle" onclick="toggleMeds()"></div>
+      </div>
+    </div>
+    
+    <div class="section-title">Notes & Reactions</div>
+    <div class="tracker-card">
+      <textarea class="notes-area" id="notesInput" placeholder="Any food that caused pain, weird symptoms, or just how you felt today…"></textarea>
+    </div>
+  </div>
+  
+  <!-- PROGRESS TAB -->
+  <div class="content tab-content" id="tab-progress">
+    <div class="section-title">Your 30-Day Journey</div>
+    
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="statStreak">0</div>
+        <div class="stat-label">🔥 Day Streak</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-value" id="statComplete">0</div>
+        <div class="stat-label">✓ Days Complete</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-value" id="statAvgSymp">—</div>
+        <div class="stat-label">Avg Symptoms</div>
+      </div>
+      <div class="stat-card neutral">
+        <div class="stat-value" id="statWeight">—</div>
+        <div class="stat-label">Current Weight</div>
+      </div>
+    </div>
+    
+    <div class="section-title">Calendar</div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+    
+    <div class="section-title">Weight Progress</div>
+    <div class="chart-container">
+      <div id="weightChart" class="chart"></div>
+    </div>
+    
+    <div class="section-title">Achievements</div>
+    <div id="achievementsContainer"></div>
+  </div>
+  
+  <!-- RESOURCES TAB -->
+  <div class="content tab-content" id="tab-resources">
+    <div class="section-title">Foods & Swaps</div>
+    
+    <div class="resource-section">
+      <h3>✅ Safe Foods</h3>
+      <ul class="resource-list success">
+        <li>Pap (ogi), oatmeal, millet porridge</li>
+        <li>White rice, boiled yam, plantain, sweet potato</li>
+        <li>Fresh fish, chicken (skinless), eggs, tofu</li>
+        <li>Carrots, green beans, okra, ugwu, ewedu</li>
+        <li>Ripe banana, pawpaw, watermelon, honeydew</li>
+        <li>Avocado, coconut water, plain yogurt (nono)</li>
+      </ul>
+    </div>
+    
+    <div class="resource-section">
+      <h3>❌ Avoid Strictly</h3>
+      <ul class="resource-list danger">
+        <li>Pepper/chili (fresh or dry)</li>
+        <li>Onions, garlic, ginger</li>
+        <li>Maggi, Knorr, Royco, all cubes</li>
+        <li>Tomatoes (fresh or paste), vinegar</li>
+        <li>Citrus (orange, lemon, lime)</li>
+        <li>Kuli-kuli, fried foods, palm oil in excess</li>
+        <li>Alcohol, Coke, Fanta, Sprite, coffee</li>
+        <li>Smoked fish, agbo, herbal mixtures</li>
+      </ul>
+    </div>
+    
+    <div class="resource-section">
+      <h3>🌧️ Cold/Rainy Day Swaps</h3>
+      <ul class="resource-list">
+        <li>Cold pap → Hot pap with honey</li>
+        <li>Bread + water → Bread + hot soya milk</li>
+        <li>Cold broth → Hot broth with scent leaf</li>
+        <li>Plain rice → Rice soaked in hot broth</li>
+        <li>Cold fruit → Gently warmed pawpaw puree</li>
+      </ul>
+    </div>
+    
+    <div class="resource-section">
+      <h3>🔄 Missing Ingredient Swaps</h3>
+      <ul class="resource-list">
+        <li>Fish → Chicken or 2 boiled eggs</li>
+        <li>Eggs → Tofu (mashed) or soft beans</li>
+        <li>Yam → Plantain or sweet potato</li>
+        <li>Carrots → Pumpkin (boiled, mashed)</li>
+        <li>Pap → Oatmeal or millet porridge</li>
+        <li>Soya milk → Warm thin pap or nono</li>
+      </ul>
+    </div>
+    
+    <div class="resource-section">
+      <h3>🍌 Fruit-Only Day (Low Appetite)</h3>
+      <ul class="resource-list">
+        <li><strong>6:30 AM</strong> — 1 ripe banana + warm water</li>
+        <li><strong>9:30 AM</strong> — ½ ripe pawpaw</li>
+        <li><strong>1:00 PM</strong> — Rice + ½ avocado (if hungry)</li>
+        <li><strong>5:00 PM</strong> — Coconut water + banana</li>
+        <li><strong>8:00 PM</strong> — ½ honeydew or skip</li>
+      </ul>
+      <p style="font-size:12px; color:var(--text-light); margin-top:8px;">Use for 1–2 days max when appetite is low.</p>
+    </div>
+    
+    <div class="section-title">Critical Reminders</div>
+    
+    <div class="warning-box">
+      <strong>🚨 Go to hospital if you have:</strong>
+      <p>• Black, tarry stool (bleeding)<br>• Vomiting blood or "coffee grounds"<br>• Severe pain that won't stop<br>• Sudden weight loss >3kg/month<br>• Difficulty swallowing</p>
+    </div>
+    
+    <div class="resource-section">
+      <h3>💊 Medical Rules</h3>
+      <ul class="resource-list">
+        <li>Take antacids as prescribed</li>
+        <li>Get tested for H. pylori</li>
+        <li>Complete triple/quadruple therapy if positive</li>
+        <li>No NSAIDs (ibuprofen, diclofenac) — use paracetamol only</li>
+        <li>No smoking or alcohol</li>
+        <li>No agbo or herbal mixtures</li>
+        <li>Review with doctor every 2 weeks</li>
+        <li>Sleep with head raised 6–8 inches</li>
+        <li>Wait 3 hours after eating before lying down</li>
+      </ul>
+    </div>
+    
+    <div class="resource-section">
+      <h3>🍽️ Daily Eating Rules</h3>
+      <ul class="resource-list">
+        <li>Chew every bite 20–30 times (until liquid)</li>
+        <li>Stop at 80% full — never finish the plate</li>
+        <li>Eat freshly cooked food only — no leftovers</li>
+        <li>No water 30 min before or 1 hour after meals</li>
+        <li>Sip 6–8 glasses of warm water daily</li>
+        <li>Eat fruit alone, never with other food</li>
+        <li>Fruit must be ripe, room temperature</li>
+      </ul>
+    </div>
+  </div>
+  
+  <!-- SETTINGS TAB -->
+  <div class="content tab-content" id="tab-settings">
+    <div class="section-title">Settings</div>
+    
+    <div id="settingsContainer"></div>
+    
+    <div class="section-title">About</div>
+    <div class="resource-section">
+      <p style="font-size:13px; color:var(--text-light);">This is a healing companion, not a medical tool. Always follow your doctor's instructions. The food plan supports your treatment — medication cures the ulcer.</p>
+      <p style="font-size:12px; color:var(--text-muted); margin-top:8px;">Version 1.0 · Made with 💙 for healing.</p>
+    </div>
+  </div>
+  
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="nav-item active" data-tab="today" onclick="switchTab('today')">
+      <span class="nav-icon">🏠</span>
+      <span>Today</span>
+    </button>
+    <button class="nav-item" data-tab="progress" onclick="switchTab('progress')">
+      <span class="nav-icon">📊</span>
+      <span>Progress</span>
+    </button>
+    <button class="nav-item" data-tab="resources" onclick="switchTab('resources')">
+      <span class="nav-icon">📚</span>
+      <span>Resources</span>
+    </button>
+    <button class="nav-item" data-tab="settings" onclick="switchTab('settings')">
+      <span class="nav-icon">⚙️</span>
+      <span>Settings</span>
+    </button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+  <div class="modal" id="modalContent" onclick="event.stopPropagation()"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const planData = {
+  1: {
+    meals: [
+      { id: 'morning', icon: '🌅', title: 'Morning', time: '6:30 AM',
+        normal: 'Pap (ogi) + splash of soya milk + pinch of salt',
+        cold: 'Warm millet porridge with a little honey',
+        missing: 'Oatmeal cooked thin with water',
+        fruit: '1 ripe banana + warm water' },
+      { id: 'midMorning', icon: '☕', title: 'Mid-Morning', time: '9:30 AM',
+        normal: '1 slice bread soaked in warm water',
+        cold: 'Warm soya milk with bread slice',
+        missing: 'Ripe banana (mashed)',
+        fruit: '½ ripe pawpaw (mashed)' },
+      { id: 'afternoon', icon: '🍚', title: 'Afternoon', time: '1:00 PM',
+        normal: 'White rice + steamed carrots + shredded fish + ½ tsp palm oil + salt',
+        cold: 'White rice + fish broth poured over it (soupy rice)',
+        missing: 'White rice + mashed ripe plantain + egg',
+        fruit: 'White rice + ½ avocado (small portion)' },
+      { id: 'evening', icon: '🥣', title: 'Evening', time: '5:00 PM',
+        normal: 'Fish broth with 1 boiled garden egg',
+        cold: 'Hot chicken broth sipped slowly',
+        missing: 'Warm soya milk + 1 boiled egg',
+        fruit: '1 glass coconut water + 1 banana' },
+      { id: 'nightcap', icon: '🌙', title: 'Nightcap', time: '8:00 PM',
+        normal: 'Boiled unripe plantain mashed with ½ tsp palm oil',
+        cold: 'Warm thin pap with honey',
+        missing: 'Boiled sweet potato mashed soft',
+        fruit: '½ honeydew melon (if tolerated)' }
+    ]
+  },
+  2: {
+    meals: [
+      { id: 'morning', icon: '🌅', title: 'Morning', time: '6:30 AM',
+        normal: 'Oatmeal porridge (thin) + pinch of salt',
+        cold: 'Hot oatmeal with warm soya milk stirred in',
+        missing: 'Warm millet porridge',
+        fruit: '1 ripe banana + warm water' },
+      { id: 'midMorning', icon: '☕', title: 'Mid-Morning', time: '9:30 AM',
+        normal: 'Ripe pawpaw (soft, mashed)',
+        cold: 'Warm pawpaw puree (gently heated)',
+        missing: 'Ripe banana',
+        fruit: '½ watermelon (chewed well)' },
+      { id: 'afternoon', icon: '🍚', title: 'Afternoon', time: '1:00 PM',
+        normal: 'Boiled yam + okra draw soup (no pepper/onion) + salt + ½ tsp palm oil + uziza',
+        cold: 'Boiled yam + hot fish broth with okra',
+        missing: 'Boiled yam + mashed beans (soft)',
+        fruit: 'Boiled yam + ½ avocado' },
+      { id: 'evening', icon: '🥣', title: 'Evening', time: '5:00 PM',
+        normal: '1 boiled egg mashed with 1 tsp soya milk',
+        cold: 'Warm egg drop in chicken broth (no pepper)',
+        missing: 'Soft tofu mashed with pinch of salt',
+        fruit: 'Pawpaw puree + honey' },
+      { id: 'nightcap', icon: '🌙', title: 'Nightcap', time: '8:00 PM',
+        normal: 'Warm thin pap',
+        cold: 'Hot oatmeal (very thin)',
+        missing: 'Warm soya milk',
+        fruit: 'Coconut water (small glass)' }
+    ]
+  },
+  3: {
+    meals: [
+      { id: 'morning', icon: '🌅', title: 'Morning', time: '6:30 AM',
+        normal: 'Moin-moin (no onion/pepper, beans + tiny crayfish + palm oil) — 1 wrap',
+        cold: 'Same moin-moin served warm with warm pap on the side',
+        missing: 'Boiled beans (soft, mashed) + 1 boiled egg',
+        fruit: '1 ripe banana + warm water' },
+      { id: 'midMorning', icon: '☕', title: 'Mid-Morning', time: '9:30 AM',
+        normal: '1 slice bread soaked in warm water',
+        cold: 'Warm soya milk + bread',
+        missing: 'Ripe banana',
+        fruit: '½ pawpaw' },
+      { id: 'afternoon', icon: '🍚', title: 'Afternoon', time: '1:00 PM',
+        normal: 'White rice + stew (blended carrots + green beans, no tomato) + shredded chicken',
+        cold: 'White rice + hot chicken broth + boiled carrots',
+        missing: 'White rice + mashed sweet potato + boiled egg',
+        fruit: 'White rice + ½ avocado + cucumber' },
+      { id: 'evening', icon: '🥣', title: 'Evening', time: '5:00 PM',
+        normal: 'Chicken broth with shredded chicken bits',
+        cold: 'Hot chicken broth sipped with bread',
+        missing: 'Warm soya milk + bread',
+        fruit: 'Coconut water + banana' },
+      { id: 'nightcap', icon: '🌙', title: 'Nightcap', time: '8:00 PM',
+        normal: '1 small boiled Irish potato mashed with salt',
+        cold: 'Warm sweet potato porridge (soft)',
+        missing: 'Boiled yam (small) mashed',
+        fruit: 'Warm pawpaw (small portion)' }
+    ]
+  },
+  4: {
+    meals: [
+      { id: 'morning', icon: '🌅', title: 'Morning', time: '6:30 AM',
+        normal: 'Thin oatmeal porridge + 1 boiled egg stirred in',
+        cold: 'Hot oatmeal with egg + warm soya milk',
+        missing: 'Warm millet porridge + 1 boiled egg',
+        fruit: '1 ripe banana + warm water' },
+      { id: 'midMorning', icon: '☕', title: 'Mid-Morning', time: '9:30 AM',
+        normal: '¼ small watermelon (chewed well)',
+        cold: 'Warm pawpaw (gently warmed, mashed)',
+        missing: 'Ripe banana',
+        fruit: '½ pawpaw' },
+      { id: 'afternoon', icon: '🍚', title: 'Afternoon', time: '1:00 PM',
+        normal: 'Boiled unripe plantain + ugwu sauce (blended leaves + tiny crayfish, no pepper) + salt',
+        cold: 'Boiled plantain + hot fish broth with ugwu',
+        missing: 'Boiled yam + ewedu (soft, no pepper)',
+        fruit: 'Boiled plantain + ½ avocado' },
+      { id: 'evening', icon: '🥣', title: 'Evening', time: '5:00 PM',
+        normal: 'Pap with ½ tsp palm oil stirred in',
+        cold: 'Warm thick pap with honey',
+        missing: 'Warm soya milk',
+        fruit: 'Pawpaw + honey' },
+      { id: 'nightcap', icon: '🌙', title: 'Nightcap', time: '8:00 PM',
+        normal: 'Warm soya milk',
+        cold: 'Hot thin oatmeal',
+        missing: 'Warm coconut water',
+        fruit: 'Small banana (if tolerated)' }
+    ]
+  },
+  5: {
+    meals: [
+      { id: 'morning', icon: '🌅', title: 'Morning', time: '6:30 AM',
+        normal: '2 slices soft Agege bread soaked in warm water + soya milk',
+        cold: 'Warm bread pudding (bread soaked in hot soya milk, no sugar)',
+        missing: 'Oatmeal porridge + 1 boiled egg',
+        fruit: '1 ripe banana + warm water' },
+      { id: 'midMorning', icon: '☕', title: 'Mid-Morning', time: '9:30 AM',
+        normal: 'Ripe pawpaw (eaten soft)',
+        cold: 'Warm pawpaw puree',
+        missing: 'Ripe banana',
+        fruit: '½ watermelon' },
+      { id: 'afternoon', icon: '🍚', title: 'Afternoon', time: '1:00 PM',
+        normal: 'Fish broth + boiled carrots + 1 small pounded yam',
+        cold: 'Hot fish soup (no pepper — just fish, salt, scent leaf) + small yam',
+        missing: 'White rice + fish stew (carrot base)',
+        fruit: 'Small pounded yam + ½ avocado' },
+      { id: 'evening', icon: '🥣', title: 'Evening', time: '5:00 PM',
+        normal: '1 boiled egg mashed with ½ tsp palm oil',
+        cold: 'Egg drop in warm chicken broth',
+        missing: 'Soft tofu with pinch of salt',
+        fruit: 'Coconut water + banana' },
+      { id: 'nightcap', icon: '🌙', title: 'Nightcap', time: '8:00 PM',
+        normal: 'Warm thin oatmeal',
+        cold: 'Hot millet porridge',
+        missing: 'Warm thin pap',
+        fruit: 'Small honeydew portion' }
+    ]
+  },
+  6: {
+    meals: [
+      { id: 'morning', icon: '🌅', title: 'Morning', time: '6:30 AM',
+        normal: 'Pap + mashed boiled sweet potato stirred in',
+        cold: 'Warm thick pap with sweet potato + honey',
+        missing: 'Oatmeal + mashed banana',
+        fruit: '1 ripe banana + warm water' },
+      { id: 'midMorning', icon: '☕', title: 'Mid-Morning', time: '9:30 AM',
+        normal: 'Watermelon puree (blended smooth, no sugar)',
+        cold: 'Warm pawpaw',
+        missing: 'Ripe banana',
+        fruit: '½ pawpaw' },
+      { id: 'afternoon', icon: '🍚', title: 'Afternoon', time: '1:00 PM',
+        normal: 'White rice + boiled garden eggs + shredded Titus fish + salt + ½ tsp palm oil',
+        cold: 'White rice + hot fish broth with garden eggs',
+        missing: 'White rice + mashed beans + ½ avocado',
+        fruit: 'White rice + cucumber + ½ avocado' },
+      { id: 'evening', icon: '🥣', title: 'Evening', time: '5:00 PM',
+        normal: 'Vegetable broth (ugwu water, strained, salted)',
+        cold: 'Hot ugwu broth with bread slice',
+        missing: 'Warm chicken broth',
+        fruit: 'Pawpaw + honey' },
+      { id: 'nightcap', icon: '🌙', title: 'Nightcap', time: '8:00 PM',
+        normal: '1 small boiled yam mashed soft',
+        cold: 'Warm yam porridge (soft)',
+        missing: 'Warm soya milk',
+        fruit: 'Coconut water (small)' }
+    ]
+  },
+  7: {
+    meals: [
+      { id: 'morning', icon: '🌅', title: 'Morning', time: '6:30 AM',
+        normal: 'Oatmeal porridge + pinch of honey',
+        cold: 'Hot oatmeal with honey + warm soya milk',
+        missing: 'Warm millet porridge',
+        fruit: '1 ripe banana + warm water' },
+      { id: 'midMorning', icon: '☕', title: 'Mid-Morning', time: '9:30 AM',
+        normal: '1 slice bread dipped in warm soya milk',
+        cold: 'Warm bread + warm soya milk',
+        missing: 'Ripe banana',
+        fruit: '½ pawpaw' },
+      { id: 'afternoon', icon: '🍚', title: 'Afternoon', time: '1:00 PM',
+        normal: 'Boiled unripe plantain + steamed green beans + shredded chicken',
+        cold: 'Boiled plantain + hot chicken broth with veggies',
+        missing: 'Boiled yam + mashed beans + chicken',
+        fruit: 'Boiled plantain + ½ avocado' },
+      { id: 'evening', icon: '🥣', title: 'Evening', time: '5:00 PM',
+        normal: 'Pap with a little milk stirred in',
+        cold: 'Warm pap with honey',
+        missing: 'Warm soya milk',
+        fruit: 'Coconut water + banana' },
+      { id: 'nightcap', icon: '🌙', title: 'Nightcap', time: '8:00 PM',
+        normal: '1 boiled Irish potato with pinch of salt',
+        cold: 'Warm mashed Irish potato with milk',
+        missing: 'Boiled sweet potato mashed',
+        fruit: 'Small banana' }
+    ]
+  }
+};
+
+const motivationalMessages = [
+  "💙 Healing starts with the first step.",
+  "🌱 Your body is working hard to heal — feed it kindly.",
+  "✨ Small consistent actions beat big occasional ones.",
+  "🤲 You are doing this for yourself. Keep going.",
+  "💪 Every meal is medicine right now.",
+  "🌊 Healing is not linear — bad days don't erase good ones.",
+  "🕊️ Rest is part of recovery, not laziness.",
+  "🍌 Simple food, eaten with care, heals deeply.",
+  "💧 Water is your silent healer — sip it warm.",
+  "🌅 Tomorrow is a new chance to choose healing.",
+  "🩺 Take your meds on time. They are doing the deep work.",
+  "🌿 Your stomach is sensitive now, not broken. Be patient.",
+  "🎯 You don't have to be perfect. Just consistent.",
+  "🌻 Healing is happening even when you can't feel it.",
+  "☁️ Rain or sun, your commitment matters.",
+  "🐢 Slow progress is still progress.",
+  "🛌 Sleep is when most healing happens — protect it.",
+  "🥣 Boring food now. Freedom later.",
+  "🌡️ Listen to your body. It whispers before it screams.",
+  "💎 You are worth this effort.",
+  "🌙 Night healing is real — eat light, sleep well.",
+  "🍵 Warm food is love in disguise.",
+  "📅 Day by day. Meal by meal. You got this.",
+  "🧘 Stress is an ulcer's best friend. Breathe.",
+  "🌞 The sun rises. So does your strength.",
+  "🥚 Protein heals. Eat it at every meal.",
+  "💚 Your future self is thanking you already.",
+  "🪴 Healing is a season, not a moment.",
+  "🏆 30 days. One day at a time.",
+  "🎉 You are closer than you think. Keep going."
+];
+
+const achievements = [
+  { day: 1, icon: '🌱', title: 'First Step', desc: 'You started your healing journey' },
+  { day: 3, icon: '🔥', title: '3-Day Streak', desc: 'Consistency is forming' },
+  { day: 7, icon: '⭐', title: 'One Week Strong', desc: 'First full week complete' },
+  { day: 14, icon: '💪', title: 'Two Weeks', desc: 'Halfway through — amazing!' },
+  { day: 21, icon: '🏆', title: 'Three Weeks', desc: 'The finish line is near' },
+  { day: 30, icon: '👑', title: 'Healing Champion', desc: '30 days complete! Gold star.' }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+const STORAGE_KEY = 'ulcerPlanData';
+let state = null;
+
+const defaultDayState = () => ({
+  meals: { morning: { eaten: false, alt: null }, midMorning: { eaten: false, alt: null }, afternoon: { eaten: false, alt: null }, evening: { eaten: false, alt: null }, nightcap: { eaten: false, alt: null } },
+  water: 0,
+  weight: null,
+  symptoms: null,
+  energy: null,
+  meds: false,
+  notes: ''
+});
+
+const defaultState = () => ({
+  user: { name: '', startDate: '' },
+  days: {}
+});
+
+function getDayState(dayNum) {
+  if (!state.days[dayNum]) state.days[dayNum] = defaultDayState();
+  return state.days[dayNum];
+}
+
+// ============================================================
+// STORAGE
+// ============================================================
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) { console.error(e); }
+}
+
+function loadState() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (data) { state = JSON.parse(data); return true; }
+  } catch(e) { console.error(e); }
+  return false;
+}
+
+function clearAllData() {
+  if (confirm('⚠️ This will erase ALL your data (name, start date, meal logs, check-ins, notes). This cannot be undone.\n\nAre you sure?')) {
+    localStorage.removeItem(STORAGE_KEY);
+    state = defaultState();
+    document.getElementById('onboarding').style.display = 'flex';
+    document.getElementById('app').classList.remove('active');
+    showToast('All data cleared');
+  }
+}
+
+// ============================================================
+// DATE
+// ============================================================
+function todayDate() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function getCurrentDay() {
+  if (!state.user.startDate) return 1;
+  const start = new Date(state.user.startDate);
+  const now = new Date();
+  start.setHours(0,0,0,0);
+  now.setHours(0,0,0,0);
+  const diff = Math.floor((now - start) / (1000 * 60 * 60 * 24)) + 1;
+  return Math.max(1, Math.min(30, diff));
+}
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function formatDate(date) {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  if (loadState() && state.user.name && state.user.startDate) {
+    document.getElementById('onboarding').style.display = 'none';
+    document.getElementById('app').classList.add('active');
+    renderApp();
+  } else {
+    state = defaultState();
+    const dateInput = document.getElementById('startDate');
+    if (!dateInput.value) dateInput.value = todayDate();
+  }
+}
+
+function startApp() {
+  const name = document.getElementById('userName').value.trim();
+  const startDate = document.getElementById('startDate').value;
+  if (!name) { showToast('Please enter your name'); return; }
+  if (!startDate) { showToast('Please select a start date'); return; }
+  
+  state = defaultState();
+  state.user.name = name;
+  state.user.startDate = startDate;
+  saveState();
+  
+  document.getElementById('onboarding').style.display = 'none';
+  document.getElementById('app').classList.add('active');
+  renderApp();
+  celebrate();
+}
+
+function renderApp() {
+  renderHeader();
+  renderMeals();
+  renderWater();
+  renderCheckin();
+  renderProgress();
+  renderSettings();
+  setupRangeListeners();
+}
+
+// ============================================================
+// HEADER
+// ============================================================
+function renderHeader() {
+  const dayNum = getCurrentDay();
+  const name = state.user.name;
+  document.querySelector('#greeting').innerHTML = `${getGreeting()}, <strong>${name}</strong>`;
+  document.getElementById('headerDate').textContent = formatDate(new Date());
+  document.getElementById('dayNum').textContent = dayNum;
+  
+  const pct = (dayNum / 30) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${pct.toFixed(1)}% complete · ${30 - dayNum} days to go`;
+  
+  document.getElementById('motivational').textContent = motivationalMessages[dayNum - 1] || motivationalMessages[motivationalMessages.length - 1];
+}
+
+// ============================================================
+// MEALS
+// ============================================================
+function renderMeals() {
+  const dayNum = getCurrentDay();
+  const cycleDay = ((dayNum - 1) % 7) + 1;
+  const meals = planData[cycleDay].meals;
+  const dayState = getDayState(dayNum);
+  
+  const container = document.getElementById('mealsContainer');
+  container.innerHTML = meals.map(meal => {
+    const ms = dayState.meals[meal.id];
+    const eatenClass = ms.eaten ? 'eaten' : '';
+    const alt = ms.alt;
+    return `
+      <div class="meal-card ${eatenClass}" data-meal="${meal.id}">
+        <div class="meal-header">
+          <div class="meal-icon">${meal.icon}</div>
+          <div class="meal-info">
+            <div class="meal-title">${meal.title}</div>
+            <div class="meal-time">${meal.time}</div>
+          </div>
+          <button class="meal-check" onclick="toggleMeal('${meal.id}')">${ms.eaten ? '✓' : '○'}</button>
+        </div>
+        <div class="meal-text" id="meal-text-${meal.id}">${alt ? meal[alt] : meal.normal}</div>
+        <div class="meal-alts">
+          <button class="alt-btn ${!alt ? 'active' : ''}" onclick="selectAlt('${meal.id}', null)">Normal</button>
+          <button class="alt-btn ${alt === 'cold' ? 'active' : ''}" onclick="selectAlt('${meal.id}', 'cold')">🌧️ Cold</button>
+          <button class="alt-btn ${alt === 'missing' ? 'active' : ''}" onclick="selectAlt('${meal.id}', 'missing')">🔄 Swap</button>
+          <button class="alt-btn ${alt === 'fruit' ? 'active' : ''}" onclick="selectAlt('${meal.id}', 'fruit')">🍌 Fruit</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleMeal(mealId) {
+  const dayNum = getCurrentDay();
+  const dayState = getDayState(dayNum);
+  dayState.meals[mealId].eaten = !dayState.meals[mealId].eaten;
+  saveState();
+  renderMeals();
+  if (navigator.vibrate) navigator.vibrate(20);
+  
+  const allEaten = Object.values(dayState.meals).every(m => m.eaten);
+  if (allEaten) {
+    showToast('🎉 All meals done for today!');
+    setTimeout(celebrate, 300);
+  }
+}
+
+function selectAlt(mealId, altType) {
+  const dayNum = getCurrentDay();
+  const dayState = getDayState(dayNum);
+  dayState.meals[mealId].alt = altType;
+  saveState();
+  renderMeals();
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+
+// ============================================================
+// WATER
+// ============================================================
+function renderWater() {
+  const dayNum = getCurrentDay();
+  const dayState = getDayState(dayNum);
+  const container = document.getElementById('waterGlasses');
+  container.innerHTML = '';
+  for (let i = 1; i <= 8; i++) {
+    const filled = i <= dayState.water;
+    const g = document.createElement('button');
+    g.className = 'glass' + (filled ? ' filled' : '');
+    g.textContent = filled ? '💧' : '○';
+    g.onclick = () => toggleWater(i);
+    container.appendChild(g);
+  }
+  document.getElementById('waterCount').textContent = `${dayState.water} / 8 glasses`;
+}
+
+function toggleWater(glassNum) {
+  const dayNum = getCurrentDay();
+  const dayState = getDayState(dayNum);
+  dayState.water = (dayState.water === glassNum) ? glassNum - 1 : glassNum;
+  saveState();
+  renderWater();
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+
+// ============================================================
+// CHECK-IN
+// ============================================================
+function renderCheckin() {
+  const dayNum = getCurrentDay();
+  const dayState = getDayState(dayNum);
+  document.getElementById('weightInput').value = dayState.weight || '';
+  document.getElementById('symptomsInput').value = dayState.symptoms !== null ? dayState.symptoms : 0;
+  document.getElementById('symptomsValue').textContent = dayState.symptoms !== null ? dayState.symptoms : 0;
+  document.getElementById('energyInput').value = dayState.energy !== null ? dayState.energy : 5;
+  document.getElementById('energyValue').textContent = dayState.energy !== null ? dayState.energy : 5;
+  document.getElementById('medsToggle').classList.toggle('on', dayState.meds);
+  document.getElementById('notesInput').value = dayState.notes || '';
+}
+
+function setupRangeListeners() {
+  document.getElementById('weightInput').oninput = (e) => {
+    const dayNum = getCurrentDay();
+    getDayState(dayNum).weight = e.target.value ? parseFloat(e.target.value) : null;
+    saveState();
+  };
+  
+  document.getElementById('symptomsInput').oninput = (e) => {
+    const dayNum = getCurrentDay();
+    getDayState(dayNum).symptoms = parseInt(e.target.value);
+    document.getElementById('symptomsValue').textContent = e.target.value;
+    saveState();
+  };
+  
+  document.getElementById('energyInput').oninput = (e) => {
+    const dayNum = getCurrentDay();
+    getDayState(dayNum).energy = parseInt(e.target.value);
+    document.getElementById('energyValue').textContent = e.target.value;
+    saveState();
+  };
+  
+  document.getElementById('notesInput').oninput = (e) => {
+    const dayNum = getCurrentDay();
+    getDayState(dayNum).notes = e.target.value;
+    saveState();
+  };
+}
+
+function toggleMeds() {
+  const dayNum = getCurrentDay();
+  const dayState = getDayState(dayNum);
+  dayState.meds = !dayState.meds;
+  saveState();
+  document.getElementById('medsToggle').classList.toggle('on', dayState.meds);
+  if (navigator.vibrate) navigator.vibrate(15);
+  showToast(dayState.meds ? '💊 Medication logged' : 'Medication unchecked');
+}
+
+// ============================================================
+// PROGRESS
+// ============================================================
+function renderProgress() {
+  renderStats();
+  renderCalendar();
+  renderWeightChart();
+  renderAchievements();
+}
+
+function renderStats() {
+  const today = getCurrentDay();
+  let streak = 0;
+  for (let d = today; d >= 1; d--) {
+    if (isDayComplete(d)) streak++;
+    else break;
+  }
+  
+  let complete = 0;
+  for (let d = 1; d <= today; d++) {
+    if (isDayComplete(d)) complete++;
+  }
+  
+  let symptomSum = 0, symptomCount = 0;
+  let latestWeight = null;
+  for (let d = 1; d <= today; d++) {
+    const ds = getDayState(d);
+    if (ds.symptoms !== null) { symptomSum += ds.symptoms; symptomCount++; }
+    if (ds.weight) latestWeight = ds.weight;
+  }
+  
+  document.getElementById('statStreak').textContent = streak;
+  document.getElementById('statComplete').textContent = complete;
+  document.getElementById('statAvgSymp').textContent = symptomCount > 0 ? (symptomSum / symptomCount).toFixed(1) : '—';
+  document.getElementById('statWeight').textContent = latestWeight ? latestWeight + ' kg' : '—';
+}
+
+function isDayComplete(dayNum) {
+  const ds = getDayState(dayNum);
+  return Object.values(ds.meals).every(m => m.eaten);
+}
+
+function isDayPartial(dayNum) {
+  const ds = getDayState(dayNum);
+  const eaten = Object.values(ds.meals).filter(m => m.eaten).length;
+  return eaten > 0 && eaten < 5;
+}
+
+function renderCalendar() {
+  const today = getCurrentDay();
+  const container = document.getElementById('calendarGrid');
+  container.innerHTML = '';
+  for (let d = 1; d <= 30; d++) {
+    const cell = document.createElement('div');
+    cell.className = 'day-cell';
+    if (d === today) cell.classList.add('today');
+    if (d < today) {
+      if (isDayComplete(d)) cell.classList.add('complete');
+      else if (isDayPartial(d)) cell.classList.add('partial');
+      else cell.classList.add('missed');
+    } else if (d > today) {
+      cell.classList.add('future');
+    }
+    cell.innerHTML = `<span class="day-label">Day</span><span class="day-num">${d}</span>`;
+    container.appendChild(cell);
+  }
+}
+
+function renderWeightChart() {
+  const container = document.getElementById('weightChart');
+  container.innerHTML = '';
+  const weights = [];
+  for (let d = 1; d <= 30; d++) {
+    const w = getDayState(d).weight;
+    if (w) weights.push({ day: d, weight: w });
+  }
+  
+  if (weights.length === 0) {
+    container.innerHTML = '<div class="empty-state" style="margin:auto;"><div class="emoji">⚖️</div><p style="font-size:13px;">Log your weight to see a chart</p></div>';
+    container.style.height = '80px';
+    container.style.alignItems = 'center';
+    return;
+  }
+  
+  container.style.height = '140px';
+  container.style.alignItems = 'flex-end';
+  const max = Math.max(...weights.map(w => w.weight));
+  const min = Math.min(...weights.map(w => w.weight));
+  const range = max - min || 1;
+  
+  weights.slice(-14).forEach(w => {
+    const bar = document.createElement('div');
+    bar.className = 'chart-bar';
+    const h = ((w.weight - min) / range) * 80 + 20;
+    bar.style.height = h + '%';
+    bar.innerHTML = `<span class="chart-bar-label">D${w.day}</span>`;
+    bar.title = `Day ${w.day}: ${w.weight}kg`;
+    container.appendChild(bar);
+  });
+}
+
+function renderAchievements() {
+  const container = document.getElementById('achievementsContainer');
+  const today = getCurrentDay();
+  container.innerHTML = achievements.map(a => {
+    const unlocked = today >= a.day;
+    const cls = unlocked ? (a.day === 30 ? 'unlocked gold' : 'unlocked') : '';
+    return `
+      <div class="achievement ${cls}">
+        <div class="achievement-icon">${a.icon}</div>
+        <div class="achievement-text">
+          <div class="achievement-title">${a.title}</div>
+          <div class="achievement-desc">${a.desc} ${unlocked ? '✓' : `(Unlocks Day ${a.day})`}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function renderSettings() {
+  const container = document.getElementById('settingsContainer');
+  container.innerHTML = `
+    <button class="setting-item" onclick="editName()">
+      <div class="setting-icon">👤</div>
+      <div class="setting-text">
+        <div class="setting-title">Name</div>
+        <div class="setting-desc">${state.user.name}</div>
+      </div>
+    </button>
+    <button class="setting-item" onclick="editStartDate()">
+      <div class="setting-icon">📅</div>
+      <div class="setting-text">
+        <div class="setting-title">Start date</div>
+        <div class="setting-desc">${formatDate(new Date(state.user.startDate))}</div>
+      </div>
+    </button>
+    <button class="setting-item" onclick="window.print()">
+      <div class="setting-icon">🖨️</div>
+      <div class="setting-text">
+        <div class="setting-title">Print / Save as PDF</div>
+        <div class="setting-desc">Print your plan for offline use</div>
+      </div>
+    </button>
+    <button class="setting-item" onclick="exportData()">
+      <div class="setting-icon">💾</div>
+      <div class="setting-text">
+        <div class="setting-title">Export data</div>
+        <div class="setting-desc">Download backup of your progress</div>
+      </div>
+    </button>
+    <button class="setting-item" onclick="showInfo()">
+      <div class="setting-icon">ℹ️</div>
+      <div class="setting-text">
+        <div class="setting-title">Daily rules</div>
+        <div class="setting-desc">Quick reminder of the non-negotiables</div>
+      </div>
+    </button>
+    <button class="setting-item" onclick="clearAllData()" style="border-left: 4px solid var(--danger);">
+      <div class="setting-icon" style="background: var(--danger-light);">🗑️</div>
+      <div class="setting-text">
+        <div class="setting-title" style="color: var(--danger);">Clear all my data</div>
+        <div class="setting-desc">Erase everything and start over</div>
+      </div>
+    </button>
+  `;
+}
+
+function editName() {
+  const newName = prompt('Enter your name:', state.user.name);
+  if (newName && newName.trim()) {
+    state.user.name = newName.trim();
+    saveState();
+    renderApp();
+    showToast('Name updated');
+  }
+}
+
+function editStartDate() {
+  const newDate = prompt('Enter new start date (YYYY-MM-DD):', state.user.startDate);
+  if (newDate && /^\d{4}-\d{2}-\d{2}$/.test(newDate)) {
+    state.user.startDate = newDate;
+    saveState();
+    renderApp();
+    showToast('Start date updated');
+  } else if (newDate) {
+    showToast('Invalid date format');
+  }
+}
+
+function exportData() {
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ulcer-plan-backup-${todayDate()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Backup downloaded');
+}
+
+function showInfo() {
+  showModal('Daily Non-Negotiable Rules', `
+    <ul style="padding-left:20px; font-size:14px; line-height:1.8;">
+      <li>Chew every bite 20–30 times until liquid</li>
+      <li>Stop at 80% full — never finish the plate</li>
+      <li>Eat freshly cooked food only — no leftovers</li>
+      <li>No water 30 min before or 1 hour after meals</li>
+      <li>Wait 3 hours after eating before lying down</li>
+      <li>Sleep with head raised 6–8 inches</li>
+      <li>Take medications on time</li>
+      <li>No NSAIDs — use paracetamol only</li>
+    </ul>
+  `, [{ label: 'Got it', class: 'btn-primary', action: closeModal }]);
+}
+
+// ============================================================
+// NAV
+// ============================================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
+  if (navigator.vibrate) navigator.vibrate(10);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============================================================
+// MODAL & TOAST
+// ============================================================
+function showModal(title, content, buttons) {
+  const modal = document.getElementById('modal');
+  const contentEl = document.getElementById('modalContent');
+  const buttonsHtml = buttons ? buttons.map(b => `<button class="${b.class}" onclick="${b.action.name ? b.action.name + '()' : b.action}">${b.label}</button>`).join('') : '';
+  contentEl.innerHTML = `<h3>${title}</h3>${content}<div class="modal-buttons" style="margin-top:16px;">${buttonsHtml}</div>`;
+  modal.classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+function closeModalOutside(e) {
+  if (e.target.id === 'modal') closeModal();
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// CELEBRATION
+// ============================================================
+function celebrate() {
+  const emojis = ['🎉', '⭐', '💙', '✨', '🌟', '💪', '🏆'];
+  for (let i = 0; i < 20; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      c.style.left = Math.random() * 100 + '%';
+      c.style.animationDuration = (2 + Math.random() * 2) + 's';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 4000);
+    }, i * 100);
+  }
+}
+
+// ============================================================
+// START
+// ============================================================
+init();
+</script>
+</body>
+</html>
