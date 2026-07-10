@@ -494,6 +494,33 @@
   }
   
   .notes-area:focus { outline: none; border-color: var(--primary); }
+
+  /* ========== SHARE ========== */
+  .share-icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #25D366;
+    color: white;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3);
+    transition: all 0.2s;
+  }
+  
+  .share-icon-btn:active { transform: scale(0.92); }
+  .share-icon-btn.shared { background: var(--success); }
+  
+  .share-prompt-banner {
+    animation: slideDown 0.4s ease;
+  }
+  
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   
   /* ========== TABS ========== */
   .tab-content { display: none; }
@@ -871,7 +898,7 @@
     <h2>Let's get started</h2>
     <div class="form-group">
       <label for="userName">Your name</label>
-      <input type="text" id="userName" placeholder="Taahirah" maxlength="30" autocomplete="given-name">
+      <input type="text" id="userName" placeholder="e.g. Taahira" maxlength="30" autocomplete="given-name">
     </div>
     <div class="form-group">
       <label for="startDate">Start date</label>
@@ -885,14 +912,15 @@
 <!-- ========== MAIN APP ========== -->
 <div id="app">
   
-  <!-- Header -->
-  <div class="header">
-    <div class="header-top">
-      <div class="greeting" id="greeting">Good morning, <strong>Friend</strong></div>
-      <div class="header-date" id="headerDate">—</div>
-    </div>
-    <div class="day-counter">
-      Day <span class="day-num" id="dayNum">1</span> of 30
+   <!-- Header -->
+   <div class="header">
+     <div class="header-top">
+       <div class="greeting" id="greeting">Good morning, <strong>Friend</strong></div>
+       <button class="share-icon-btn" id="headerShareBtn" onclick="shareDaily()" title="Share today's progress">📤</button>
+     </div>
+     <div class="header-date" id="headerDate">—</div>
+     <div class="day-counter">
+       Day <span class="day-num" id="dayNum">1</span> of 30
     </div>
     <div class="progress-bar">
       <div class="progress-fill" id="progressFill" style="width: 3.33%"></div>
@@ -952,6 +980,27 @@
     <div class="tracker-card">
       <textarea class="notes-area" id="notesInput" placeholder="Any food that caused pain, weird symptoms, or just how you felt today…"></textarea>
     </div>
+    
+    <div class="section-title">💌 Love Note & Share</div>
+    <div class="tracker-card" style="background: linear-gradient(135deg, #FFF0F5 0%, white 100%); border-left: 4px solid #EC407A;">
+      <textarea class="notes-area" id="loveNoteInput" placeholder="Optional love note to include when you share (e.g. 'Thinking of you 💙' or 'Felt stronger today')…" style="border-color: #F8BBD0;"></textarea>
+      
+      <div id="sharePrompt" style="display:none; background: var(--success-light); border-radius: 10px; padding: 10px 12px; margin-top: 12px; font-size: 13px; color: var(--text);">
+        🎉 All meals done for today! <strong>Share your progress?</strong>
+        <button onclick="shareDaily()" style="float:right; background: var(--success); color:white; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600;">Share now</button>
+      </div>
+      
+      <div id="reminderBanner" style="display:none; background: var(--warning-light); border-radius: 10px; padding: 10px 12px; margin-top: 12px; font-size: 13px; color: var(--text);">
+        💡 Gentle reminder — share today's progress with your love?
+        <button onclick="dismissReminder()" style="float:right; background: var(--warning); color:white; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600;">Not now</button>
+        <button onclick="shareDaily()" style="background: var(--primary); color:white; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; margin-right:6px;">Share</button>
+      </div>
+      
+      <button class="btn-primary" id="shareDailyBtn" onclick="shareDaily()" style="margin-top: 14px; background: linear-gradient(135deg, var(--primary) 0%, #25D366 100%);">
+        <span id="shareBtnText">📤 Share Today's Progress via WhatsApp</span>
+      </button>
+      <div id="shareStatus" style="text-align:center; font-size:11px; color: var(--text-light); margin-top:6px;"></div>
+    </div>
   </div>
   
   <!-- PROGRESS TAB -->
@@ -991,6 +1040,30 @@
   
   <!-- RESOURCES TAB -->
   <div class="content tab-content" id="tab-resources">
+    <div class="section-title">🛒 This Week's Shopping List</div>
+    
+    <div class="resource-section" id="shoppingListSection" style="background: linear-gradient(135deg, var(--primary-lightest) 0%, white 100%);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div>
+          <h3 style="margin:0 0 4px;">For 7 days (Days <span id="shoppingDaysRange">1–7</span>)</h3>
+          <p style="font-size:12px; color: var(--text-light); margin:0;" id="shoppingProgress">0 of 0 items bought</p>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:32px; font-weight:700; color: var(--primary);" id="shoppingPct">0%</div>
+          <div style="font-size:11px; color: var(--text-light);">ready</div>
+        </div>
+      </div>
+      <div style="background: var(--primary-lighter); height: 6px; border-radius: 3px; overflow:hidden; margin-bottom:14px;">
+        <div id="shoppingBar" style="background: var(--primary); height:100%; width:0%; transition: width 0.3s;"></div>
+      </div>
+      <div id="shoppingListContainer"></div>
+      <div style="display:flex; gap:8px; margin-top:14px;">
+        <button class="btn-secondary" onclick="resetShoppingList()" style="flex:1; font-size:13px;">🔄 Reset for next week</button>
+        <button class="btn-secondary" onclick="window.print()" style="flex:1; font-size:13px;">🖨️ Print</button>
+      </div>
+      <p style="font-size:11px; color:var(--text-muted); margin-top:10px; font-style:italic;">💡 Quantities are estimated for 1 person for 7 days. Adjust if cooking for more.</p>
+    </div>
+    
     <div class="section-title">Foods & Swaps</div>
     
     <div class="resource-section">
@@ -1742,6 +1815,56 @@ const achievements = [
   { day: 30, icon: '👑', title: 'Healing Champion', desc: '30 days complete! Gold star.' }
 ];
 
+const shoppingListData = {
+  'Carbs & Grains': [
+    { item: 'White rice', qty: '1 kg', note: 'Enough for ~7 meals' },
+    { item: 'Oatmeal', qty: '1 large tin', note: 'For breakfast porridge' },
+    { item: 'Pap (ogi/akamu)', qty: '1 kg', note: 'Or buy fresh daily' },
+    { item: 'Millet (joro/maiwa)', qty: '½ kg', note: 'For cold-day porridge' },
+    { item: 'Bread (unsweetened)', qty: '2 loaves', note: 'Soft, no sugar' },
+    { item: 'Yam tubers', qty: '2 medium', note: 'For boiled yam meals' },
+    { item: 'Unripe plantain', qty: '4 fingers', note: 'For 2–3 meals' },
+    { item: 'Sweet potato', qty: '2 medium', note: 'Optional boiled/pap mix' },
+    { item: 'Irish potato', qty: '3 medium', note: 'For nightcaps' }
+  ],
+  'Proteins': [
+    { item: 'Fresh fish (mackerel/tilapia)', qty: '1 medium (~500g)', note: 'Boil or steam only' },
+    { item: 'Chicken (skinless)', qty: '½ chicken', note: 'Boil, no seasoning cube' },
+    { item: 'Eggs', qty: '1 dozen (12)', note: 'Boiled, not fried' },
+    { item: 'Brown beans', qty: '½ kg', note: 'For moin-moin (no onion/pepper)' },
+    { item: 'Plain tofu', qty: '1 pack', note: 'Optional backup for eggs' }
+  ],
+  'Vegetables & Leaves': [
+    { item: 'Carrots', qty: '5 medium', note: 'Steam or grind into stew base' },
+    { item: 'Green beans', qty: '2 handfuls', note: 'Fresh, steamed soft' },
+    { item: 'Okra', qty: '2 handfuls', note: 'For draw soup' },
+    { item: 'Pumpkin leaves (ugwu)', qty: '3 bunches', note: 'For sauce + broth' },
+    { item: 'Ewedu leaves', qty: '1 bunch', note: 'Backup for ugwu' },
+    { item: 'Garden eggs', qty: '1 small cup', note: 'Test tolerance first' },
+    { item: 'Scent leaf (efirin)', qty: '1 small bunch', note: 'For cold-day fish broth' },
+    { item: 'Uziza leaves', qty: 'small bunch', note: 'For okra soup (optional)' }
+  ],
+  'Fruits': [
+    { item: 'Ripe banana', qty: '6 fingers', note: 'Best on empty stomach' },
+    { item: 'Ripe pawpaw', qty: '1 medium', note: 'Soft, sweet' },
+    { item: 'Watermelon', qty: '1 small', note: 'Eat alone, never with food' },
+    { item: 'Honeydew melon', qty: '1 small', note: 'Optional, low acid' },
+    { item: 'Avocado', qty: '2 fruits', note: '½ per serving' },
+    { item: 'Ripe plantain (for cooking)', qty: '2 fingers', note: 'Boil soft as fruit option' },
+    { item: 'Coconut water', qty: '3 fresh nuts', note: 'Or bottled (no sugar added)' }
+  ],
+  'Liquids & Dairy': [
+    { item: 'Soya milk', qty: '2 litres', note: 'Plain, unsweetened' },
+    { item: 'Plain yogurt (nono)', qty: '1 cup', note: 'Optional, test tolerance' }
+  ],
+  'Pantry / Spices (Small Amounts)': [
+    { item: 'Palm oil', qty: '1 small bottle', note: 'Use sparingly (½ tsp/meal max)' },
+    { item: 'Salt', qty: 'small pouch', note: 'Just regular salt' },
+    { item: 'Honey', qty: '1 small bottle', note: 'Optional, for oatmeal' },
+    { item: 'Crayfish (ground)', qty: 'small pack', note: 'Tiny amount, test tolerance' }
+  ]
+};
+
 // ============================================================
 // STATE
 // ============================================================
@@ -1755,12 +1878,14 @@ const defaultDayState = () => ({
   symptoms: null,
   energy: null,
   meds: false,
-  notes: ''
+  notes: '',
+  loveNote: ''
 });
 
 const defaultState = () => ({
-  user: { name: '', startDate: '' },
-  days: {}
+  user: { name: '', startDate: '', adminPhone: '2348157102237' },
+  days: {},
+  lastSharedDate: ''
 });
 
 function getDayState(dayNum) {
@@ -1864,6 +1989,8 @@ function renderApp() {
   renderSettings();
   setupRangeListeners();
   renderQuote();
+  renderLoveNote();
+  checkSharePrompt();
 }
 
 function renderQuote() {
@@ -1937,6 +2064,7 @@ function toggleMeal(mealId) {
   dayState.meals[mealId].eaten = !dayState.meals[mealId].eaten;
   saveState();
   renderMeals();
+  checkSharePrompt();
   if (navigator.vibrate) navigator.vibrate(20);
   
   const allEaten = Object.values(dayState.meals).every(m => m.eaten);
@@ -2024,6 +2152,15 @@ function setupRangeListeners() {
     getDayState(dayNum).notes = e.target.value;
     saveState();
   };
+  
+  const loveInput = document.getElementById('loveNoteInput');
+  if (loveInput) {
+    loveInput.oninput = (e) => {
+      const dayNum = getCurrentDay();
+      getDayState(dayNum).loveNote = e.target.value;
+      saveState();
+    };
+  }
 }
 
 function toggleMeds() {
@@ -2034,6 +2171,213 @@ function toggleMeds() {
   document.getElementById('medsToggle').classList.toggle('on', dayState.meds);
   if (navigator.vibrate) navigator.vibrate(15);
   showToast(dayState.meds ? '💊 Medication logged' : 'Medication unchecked');
+}
+
+// ============================================================
+// SHARE / WHATSAPP
+// ============================================================
+function renderLoveNote() {
+  const dayNum = getCurrentDay();
+  const dayState = getDayState(dayNum);
+  const el = document.getElementById('loveNoteInput');
+  if (el) el.value = dayState.loveNote || '';
+  
+  const shareStatus = document.getElementById('shareStatus');
+  const shareBtnText = document.getElementById('shareBtnText');
+  const headerShareBtn = document.getElementById('headerShareBtn');
+  const sharedToday = state.lastSharedDate === todayDate();
+  if (sharedToday) {
+    if (shareStatus) shareStatus.textContent = '✓ Already shared today';
+    if (shareBtnText) shareBtnText.innerHTML = '✓ Shared today · Share again';
+    if (headerShareBtn) { headerShareBtn.classList.add('shared'); headerShareBtn.textContent = '✓'; }
+  } else {
+    if (shareStatus) shareStatus.textContent = '';
+    if (shareBtnText) shareBtnText.innerHTML = '📤 Share Today\'s Progress via WhatsApp';
+    if (headerShareBtn) { headerShareBtn.classList.remove('shared'); headerShareBtn.textContent = '📤'; }
+  }
+}
+
+function getDaysCompleted() {
+  let count = 0;
+  for (let d = 1; d <= 30; d++) {
+    if (isDayComplete(d)) count++;
+  }
+  return count;
+}
+
+function getCurrentStreak() {
+  const today = getCurrentDay();
+  let streak = 0;
+  for (let d = today; d >= 1; d--) {
+    if (isDayComplete(d)) streak++;
+    else break;
+  }
+  return streak;
+}
+
+function getYesterdayComparison(field) {
+  const today = getCurrentDay();
+  const yesterday = today - 1;
+  if (yesterday < 1) return null;
+  const ds = getDayState(yesterday);
+  return ds[field] !== null && ds[field] !== undefined ? ds[field] : null;
+}
+
+function formatDelta(current, yesterday, betterIs) {
+  if (current === null || current === undefined || yesterday === null || yesterday === undefined) return null;
+  if (current === yesterday) return { symbol: '➡️', text: 'same as yesterday', improved: false };
+  const diff = current - yesterday;
+  if (diff === 0) return { symbol: '➡️', text: 'same as yesterday', improved: false };
+  const betterWhen = betterIs === 'lower' ? diff < 0 : diff > 0;
+  return {
+    symbol: diff > 0 ? (betterIs === 'lower' ? '⬆️' : '⬆️') : (betterIs === 'lower' ? '⬇️' : '⬇️'),
+    text: `yesterday: ${yesterday}/10 ${betterWhen ? (betterIs === 'lower' ? '(better!)' : '(better!)') : ''}`,
+    improved: betterWhen,
+    diff: Math.abs(diff)
+  };
+}
+
+function generateDailyReport() {
+  const dayNum = getCurrentDay();
+  const ds = getDayState(dayNum);
+  const name = state.user.name || 'Friend';
+  const dateStr = formatDate(new Date());
+  
+  const mealsEaten = Object.values(ds.meals).filter(m => m.eaten).length;
+  const mealLabels = [];
+  if (ds.meals.morning.eaten) mealLabels.push('Morning');
+  if (ds.meals.midMorning.eaten) mealLabels.push('Mid-morning');
+  if (ds.meals.afternoon.eaten) mealLabels.push('Afternoon');
+  if (ds.meals.evening.eaten) mealLabels.push('Evening');
+  if (ds.meals.nightcap.eaten) mealLabels.push('Nightcap');
+  
+  const daysDone = getDaysCompleted();
+  const streak = getCurrentStreak();
+  
+  const ySymptoms = getYesterdayComparison('symptoms');
+  const yEnergy = getYesterdayComparison('energy');
+  
+  let report = `🌊 *Ulcer Plan — Day ${dayNum} of 30*\n`;
+  report += `📅 ${dateStr}\n`;
+  report += `👤 ${name}\n\n`;
+  
+  report += `📊 *Overall Progress*\n`;
+  report += `✅ Days completed: ${daysDone}/30\n`;
+  report += `🔥 Current streak: ${streak} day${streak === 1 ? '' : 's'}\n\n`;
+  
+  report += `📅 *Today*\n`;
+  report += `🍽️ Meals: ${mealsEaten}/5`;
+  if (mealLabels.length) report += ` (${mealLabels.join(', ')})`;
+  report += `\n`;
+  report += `💧 Water: ${ds.water}/8 glasses\n`;
+  if (ds.weight) report += `⚖️ Weight: ${ds.weight} kg\n`;
+  
+  if (ds.symptoms !== null) {
+    const cmp = formatDelta(ds.symptoms, ySymptoms, 'lower');
+    report += `😣 Symptoms: ${ds.symptoms}/10`;
+    if (cmp && cmp.diff > 0) report += ` (${cmp.text})`;
+    report += `\n`;
+  } else {
+    report += `😣 Symptoms: —/10\n`;
+  }
+  
+  if (ds.energy !== null) {
+    const cmp = formatDelta(ds.energy, yEnergy, 'higher');
+    report += `⚡ Energy: ${ds.energy}/10`;
+    if (cmp && cmp.diff > 0) report += ` (${cmp.text})`;
+    report += `\n`;
+  } else {
+    report += `⚡ Energy: —/10\n`;
+  }
+  
+  report += `💊 Meds: ${ds.meds ? '✓ Taken' : '✗ Not yet'}\n`;
+  
+  if (ds.notes && ds.notes.trim()) {
+    report += `\n📝 Notes: "${ds.notes.trim()}"\n`;
+  }
+  
+  if (ds.loveNote && ds.loveNote.trim()) {
+    report += `\n💌 Love note: "${ds.loveNote.trim()}"\n`;
+  }
+  
+  report += `\n💙 Keep going — Powered by Love`;
+  return report;
+}
+
+function shareDaily() {
+  const phone = state.user.adminPhone;
+  if (!phone) {
+    showToast('Add your WhatsApp number in Settings first');
+    switchTab('settings');
+    return;
+  }
+  
+  const report = generateDailyReport();
+  
+  copyToClipboard(report);
+  
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(report)}`;
+  const win = window.open(url, '_blank');
+  
+  if (!win || win.closed || typeof win.closed === 'undefined') {
+    showToast('Popup blocked — text copied. Open WhatsApp and paste.');
+  } else {
+    showToast('Opening WhatsApp...');
+  }
+  
+  state.lastSharedDate = todayDate();
+  getDayState(getCurrentDay()).loveNote = '';
+  saveState();
+  renderLoveNote();
+  if (navigator.vibrate) navigator.vibrate([20, 50, 20]);
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch(e) { console.error(e); }
+  document.body.removeChild(ta);
+}
+
+function checkSharePrompt() {
+  const dayNum = getCurrentDay();
+  const ds = getDayState(dayNum);
+  const allEaten = Object.values(ds.meals).every(m => m.eaten);
+  const shared = state.lastSharedDate === todayDate();
+  const hour = new Date().getHours();
+  
+  const promptEl = document.getElementById('sharePrompt');
+  const reminderEl = document.getElementById('reminderBanner');
+  if (!promptEl || !reminderEl) return;
+  
+  if (allEaten && !shared) {
+    promptEl.style.display = 'block';
+    reminderEl.style.display = 'none';
+  } else if (hour >= 19 && !allEaten && !shared && ds.water > 0) {
+    promptEl.style.display = 'none';
+    reminderEl.style.display = 'block';
+  } else {
+    promptEl.style.display = 'none';
+    reminderEl.style.display = 'none';
+  }
+}
+
+function dismissReminder() {
+  state.dismissedReminderDate = todayDate();
+  saveState();
+  document.getElementById('reminderBanner').style.display = 'none';
 }
 
 // ============================================================
@@ -2160,6 +2504,7 @@ function renderAchievements() {
 // ============================================================
 function renderSettings() {
   const container = document.getElementById('settingsContainer');
+  const phoneDisplay = state.user.adminPhone ? '+' + state.user.adminPhone : 'Not set';
   container.innerHTML = `
     <button class="setting-item" onclick="editName()">
       <div class="setting-icon">👤</div>
@@ -2173,6 +2518,13 @@ function renderSettings() {
       <div class="setting-text">
         <div class="setting-title">Start date</div>
         <div class="setting-desc">${formatDate(new Date(state.user.startDate))}</div>
+      </div>
+    </button>
+    <button class="setting-item" onclick="editAdminPhone()" style="border-left: 4px solid #25D366;">
+      <div class="setting-icon" style="background: #D4F4DC;">💬</div>
+      <div class="setting-text">
+        <div class="setting-title">WhatsApp number</div>
+        <div class="setting-desc">${phoneDisplay} · Sends daily report here</div>
       </div>
     </button>
     <button class="setting-item" onclick="window.print()">
@@ -2204,6 +2556,22 @@ function renderSettings() {
       </div>
     </button>
   `;
+}
+
+function editAdminPhone() {
+  const current = state.user.adminPhone ? '+' + state.user.adminPhone : '';
+  const input = prompt('WhatsApp number (with country code, no spaces, no +):\n\nExample: 2348012345678', current.replace(/^\+/, ''));
+  if (input !== null) {
+    const cleaned = input.replace(/[^0-9]/g, '');
+    if (cleaned.length < 10) {
+      showToast('Number too short — include country code');
+      return;
+    }
+    state.user.adminPhone = cleaned;
+    saveState();
+    renderSettings();
+    showToast('WhatsApp number saved');
+  }
 }
 
 function editName() {
@@ -2315,6 +2683,12 @@ function celebrate() {
 // START
 // ============================================================
 init();
+
+setInterval(() => {
+  if (document.getElementById('app').classList.contains('active')) {
+    checkSharePrompt();
+  }
+}, 60000);
 </script>
 </body>
 </html>
