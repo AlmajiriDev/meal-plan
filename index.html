@@ -2136,7 +2136,7 @@ const defaultDayState = () => ({
 });
 
 const defaultState = () => ({
-  user: { name: '', startDate: '', adminPhone: '2348157102237', customPrepTimes: {} },
+  user: { name: '', startDate: '', adminPhone: '2348157102237', customPrepTimes: {}, bedtime: '22:00', customMealTimes: {} },
   days: {},
   lastSharedDate: '',
   shoppingChecked: {},
@@ -2144,6 +2144,14 @@ const defaultState = () => ({
   alarmsEnabled: true,
   alarmTimers: {}
 });
+
+const MEAL_TIME_RULES = {
+  noEarlierThanMorning: '05:00',
+  noLaterThanNight: '23:30',
+  minGapMinutes: 120,
+  minGapBeforeBed: 120,
+  minGapAfterWake: 30
+};
 
 function getDayState(dayNum) {
   if (!state.days[dayNum]) state.days[dayNum] = defaultDayState();
@@ -2658,16 +2666,114 @@ function parseTimeToToday(timeStr) {
   return d;
 }
 
+function timeToMinutes(timeStr) {
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function minutesToTime(mins) {
+  mins = ((mins % 1440) + 1440) % 1440;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+
+function getMealTime(mealId) {
+  const custom = state.user && state.user.customMealTimes;
+  if (custom && typeof custom[mealId] === 'string') return custom[mealId];
+  const def = mealSchedule.find(m => m.id === mealId);
+  return def ? def.time : '12:00';
+}
+
+function validateMealTimeChange(mealId, newTimeStr) {
+  const errors = [];
+  const warnings = [];
+  
+  if (!/^([01]?\d|2[0-3]):[0-5]\d$/.test(newTimeStr)) {
+    errors.push('Use HH:MM 24-hour format, e.g. 14:30');
+    return { errors, warnings, ok: false };
+  }
+  
+  const newMins = timeToMinutes(newTimeStr);
+  const bedMins = timeToMinutes(state.user.bedtime || '22:00');
+  const earliestMins = timeToMinutes(MEAL_TIME_RULES.noEarlierThanMorning);
+  const latestMins = timeToMinutes(MEAL_TIME_RULES.noLaterThanNight);
+  
+  if (newMins < earliestMins) {
+    errors.push(`Too early — meals must start after ${MEAL_TIME_RULES.noEarlierThanMorning}`);
+  }
+  if (newMins > latestMins) {
+    errors.push(`Too late — meals must end before ${MEAL_TIME_RULES.noLaterThanNight}`);
+  }
+  
+  const sortedMeals = mealSchedule.slice().map(m => ({
+    id: m.id,
+    label: m.label,
+    isThis: m.id === mealId,
+    mins: m.id === mealId ? newMins : timeToMinutes(getMealTime(m.id))
+  })).sort((a,b) => a.mins - b.mins);
+  
+  const idx = sortedMeals.findIndex(m => m.isThis);
+  const thisMeal = sortedMeals[idx];
+  
+  if (idx > 0) {
+    const prev = sortedMeals[idx - 1];
+    const gap = thisMeal.mins - prev.mins;
+    if (gap < MEAL_TIME_RULES.minGapMinutes) {
+      errors.push(`Only ${gap} min after ${prev.label} (min ${MEAL_TIME_RULES.minGapMinutes} min between meals)`);
+    }
+  }
+  
+  if (idx < sortedMeals.length - 1) {
+    const next = sortedMeals[idx + 1];
+    const gap = next.mins - thisMeal.mins;
+    if (gap < MEAL_TIME_RULES.minGapMinutes) {
+      errors.push(`Only ${gap} min before ${next.label} (min ${MEAL_TIME_RULES.minGapMinutes} min between meals)`);
+    }
+  }
+  
+  const bedtimeGap = bedMins > newMins ? (bedMins - newMins) : (1440 - newMins + bedMins);
+  if (bedtimeGap < MEAL_TIME_RULES.minGapBeforeBed) {
+    const isLast = idx === sortedMeals.length - 1;
+    if (isLast) {
+      errors.push(`Only ${bedtimeGap} min before bedtime (need ${MEAL_TIME_RULES.minGapBeforeBed} min). Adjust bedtime in Settings.`);
+    } else {
+      warnings.push(`Bedtime is ${bedtimeGap} min after this meal — fine if this isn't your last meal`);
+    }
+  }
+  
+  if (idx === sortedMeals.length - 1 && bedtimeGap < MEAL_TIME_RULES.minGapBeforeBed) {
+    errors.push(`Last meal must be at least ${MEAL_TIME_RULES.minGapBeforeBed} min before bedtime (current bedtime: ${state.user.bedtime})`);
+  }
+  
+  return { errors, warnings, ok: errors.length === 0, sortedMeals, thisIdx: idx };
+}
+
+function applyMealTimeChange(mealId, newTimeStr) {
+  const result = validateMealTimeChange(mealId, newTimeStr);
+  if (!result.ok) {
+    showToast('❌ ' + result.errors[0]);
+    return false;
+  }
+  if (!state.user.customMealTimes) state.user.customMealTimes = {};
+  state.user.customMealTimes[mealId] = newTimeStr;
+  saveState();
+  scheduleAllAlarms();
+  updateNextMealDisplay();
+  return true;
+}
+
 function getNextMealInfo() {
   const dayNum = getCurrentDay();
   const dayState = getDayState(dayNum);
   const now = new Date();
   
   for (const m of mealSchedule) {
-    const mealTime = parseTimeToToday(m.time);
-    const prepNotifTime = new Date(mealTime.getTime() - m.prepMin * 60000);
+    const timeStr = getMealTime(m.id);
+    const mealTime = parseTimeToToday(timeStr);
+    const prepNotifTime = new Date(mealTime.getTime() - getPrepMin(m.id) * 60000);
     if (dayState.meals[m.id].eaten) continue;
-    if (mealTime > now) return { meal: m, mealTime, prepNotifTime };
+    if (mealTime > now) return { meal: { ...m, time: timeStr }, mealTime, prepNotifTime };
   }
   return null;
 }
@@ -2726,7 +2832,8 @@ function scheduleAllAlarms() {
   
   mealSchedule.forEach(m => {
     if (dayState.meals[m.id].eaten) return;
-    const mealTime = parseTimeToToday(m.time);
+    const timeStr = getMealTime(m.id);
+    const mealTime = parseTimeToToday(timeStr);
     const prepMin = getPrepMin(m.id);
     const prepNotifTime = new Date(mealTime.getTime() - prepMin * 60000);
     const ms = prepNotifTime - now;
@@ -2792,9 +2899,9 @@ function dismissAlarm() {
   
   const now = new Date();
   mealSchedule.forEach(m => {
-    const mealTime = parseTimeToToday(m.time);
-    const now2 = new Date();
-    if (mealTime > now2) {
+    const timeStr = getMealTime(m.id);
+    const mealTime = parseTimeToToday(timeStr);
+    if (mealTime > now) {
       const ms = 5 * 60 * 1000;
       if (state.alarmTimers[m.id]) clearTimeout(state.alarmTimers[m.id]);
       state.alarmTimers[m.id] = setTimeout(() => triggerAlarm(m.id), ms);
@@ -3109,6 +3216,20 @@ function renderSettings() {
         <div class="setting-desc">Alerts you ${state.alarmsEnabled ? 'before' : 'OFF · tap to enable'} each meal · Browser: ${permStatus}</div>
       </div>
     </button>
+    <button class="setting-item" onclick="showMealTimes()">
+      <div class="setting-icon">🕐</div>
+      <div class="setting-text">
+        <div class="setting-title">Meal times</div>
+        <div class="setting-desc">Last: ${getMealTime('nightcap')} · Bedtime: ${state.user.bedtime} · tap to change</div>
+      </div>
+    </button>
+    <button class="setting-item" onclick="editBedtime()">
+      <div class="setting-icon">🛏️</div>
+      <div class="setting-text">
+        <div class="setting-title">Bedtime</div>
+        <div class="setting-desc">${state.user.bedtime} · used for last-meal rules</div>
+      </div>
+    </button>
     <button class="setting-item" onclick="showAlarmSchedule()">
       <div class="setting-icon">📋</div>
       <div class="setting-text">
@@ -3167,16 +3288,14 @@ function showAlarmSchedule() {
   const rows = mealSchedule.map(m => {
     const prepMin = getPrepMin(m.id);
     const isCustom = state.user.customPrepTimes && typeof state.user.customPrepTimes[m.id] === 'number';
-    const [h, mm] = m.time.split(':').map(Number);
-    const alarmH = Math.max(0, h);
-    let alarmMins = mm - prepMin;
-    let alarmH2 = alarmH;
-    while (alarmMins < 0) { alarmMins += 60; alarmH2 = (alarmH2 - 1 + 24) % 24; }
-    const alarmTime = `${String(alarmH2).padStart(2,'0')}:${String(alarmMins).padStart(2,'0')}`;
+    const timeStr = getMealTime(m.id);
+    const mealMins = timeToMinutes(timeStr);
+    const alarmMins = mealMins - prepMin;
+    const alarmTime = minutesToTime(alarmMins);
     return `
       <tr>
         <td style="padding:8px 6px; border-bottom:1px solid var(--primary-lightest);"><strong>${m.label}</strong></td>
-        <td style="padding:8px 6px; border-bottom:1px solid var(--primary-lightest);">${m.time}</td>
+        <td style="padding:8px 6px; border-bottom:1px solid var(--primary-lightest);">${timeStr}</td>
         <td style="padding:8px 6px; border-bottom:1px solid var(--primary-lightest); color: var(--primary-dark); font-weight:600;">${alarmTime}</td>
         <td style="padding:8px 6px; border-bottom:1px solid var(--primary-lightest);">
           <input type="number" min="0" max="120" value="${prepMin}" 
@@ -3207,6 +3326,98 @@ function showAlarmSchedule() {
     { label: '🔄 Reset defaults', class: 'btn-secondary', action: 'resetPrepTimes()' },
     { label: 'Save', class: 'btn-primary', action: 'savePrepTimes()' }
   ]);
+}
+
+function showMealTimes() {
+  const bedMins = timeToMinutes(state.user.bedtime || '22:00');
+  const rows = mealSchedule.map((m, idx) => {
+    const timeStr = getMealTime(m.id);
+    const isCustom = state.user.customMealTimes && typeof state.user.customMealTimes[m.id] === 'string';
+    const isLast = idx === mealSchedule.length - 1;
+    const bedGap = isLast ? ((bedMins - timeToMinutes(timeStr) + 1440) % 1440) : null;
+    return `
+      <tr>
+        <td style="padding:8px 4px; border-bottom:1px solid var(--primary-lightest);"><strong>${m.label}</strong>${isLast ? ' <span style="font-size:9px; color:var(--text-light);">(last)</span>' : ''}</td>
+        <td style="padding:8px 4px; border-bottom:1px solid var(--primary-lightest);">
+          <input type="time" id="mt-${m.id}" value="${timeStr}" 
+                 onchange="applyMealTimeChange('${m.id}', this.value); showMealTimes();"
+                 style="padding:6px 8px; border:2px solid var(--primary-lighter); border-radius:6px; font-size:14px; font-weight:600; color: var(--primary-darker);">
+          ${isCustom ? '<span style="font-size:10px; color: var(--primary-dark); margin-left:4px;">✏️</span>' : ''}
+        </td>
+        <td style="padding:8px 4px; border-bottom:1px solid var(--primary-lightest); font-size:12px;">
+          ${isLast ? (bedGap >= MEAL_TIME_RULES.minGapBeforeBed 
+            ? `<span style="color:var(--success);">✓ ${bedGap} min before bed</span>`
+            : `<span style="color:var(--danger);">⚠ only ${bedGap} min before bed</span>`) 
+          : '&nbsp;'}
+        </td>
+      </tr>
+    `;
+  }).join('');
+  
+  showModal('🕐 Meal Times', `
+    <p style="font-size:13px;">Set when you eat each meal. The last meal must end <strong>at least ${MEAL_TIME_RULES.minGapBeforeBed} min before bedtime</strong>.</p>
+    <p style="font-size:12px; color: var(--text-light); margin-bottom: 12px;">Bedtime: <strong>${state.user.bedtime}</strong> · Min gap between meals: ${MEAL_TIME_RULES.minGapMinutes} min</p>
+    <table style="width:100%; font-size:13px; border-collapse:collapse;">
+      <thead>
+        <tr style="background: var(--primary-lightest);">
+          <th style="padding:6px; text-align:left; font-size:11px;">Meal</th>
+          <th style="padding:6px; text-align:left; font-size:11px;">Time</th>
+          <th style="padding:6px; text-align:left; font-size:11px;">Rule check</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="background: var(--primary-lightest); border-radius: 10px; padding: 10px 12px; margin-top: 12px; font-size: 12px;">
+      <strong>📋 Rules enforced:</strong>
+      <ul style="padding-left: 18px; margin-top: 4px; line-height: 1.7;">
+        <li>First meal ≥ ${MEAL_TIME_RULES.noEarlierThanMorning}</li>
+        <li>Last meal ≤ bedtime − ${MEAL_TIME_RULES.minGapBeforeBed} min (current bedtime: ${state.user.bedtime})</li>
+        <li>At least ${MEAL_TIME_RULES.minGapMinutes} min between meals</li>
+        <li>Meals must be in chronological order</li>
+      </ul>
+    </div>
+  `, [
+    { label: '🔄 Reset to defaults', class: 'btn-secondary', action: 'resetMealTimes()' },
+    { label: 'Done', class: 'btn-primary', action: 'finishMealTimes()' }
+  ]);
+}
+
+function resetMealTimes() {
+  if (!confirm('Reset all meal times to defaults?\n\nYour bedtime stays as-is.')) return;
+  state.user.customMealTimes = {};
+  saveState();
+  scheduleAllAlarms();
+  updateNextMealDisplay();
+  showMealTimes();
+  renderSettings();
+  showToast('Meal times reset');
+}
+
+function finishMealTimes() {
+  closeModal();
+  scheduleAllAlarms();
+  updateNextMealDisplay();
+  renderSettings();
+}
+
+function editBedtime() {
+  const cur = state.user.bedtime || '22:00';
+  const input = prompt(`Bedtime (HH:MM, 24-hour):\n\nThis is when you typically go to sleep. Your last meal must finish at least ${MEAL_TIME_RULES.minGapBeforeBed} min before this time.`, cur);
+  if (input === null) return;
+  if (!/^([01]?\d|2[0-3]):[0-5]\d$/.test(input)) {
+    showToast('Invalid time — use HH:MM format, e.g. 22:00');
+    return;
+  }
+  const h = parseInt(input.split(':')[0]);
+  if (h < 18 || h > 23) {
+    if (!confirm(`${input} seems unusual for bedtime (most people sleep 19:00–23:59). Save anyway?`)) return;
+  }
+  state.user.bedtime = input;
+  saveState();
+  scheduleAllAlarms();
+  updateNextMealDisplay();
+  renderSettings();
+  showToast(`Bedtime set to ${input}`);
 }
 
 function updatePrepTime(mealId, value) {
