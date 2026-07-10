@@ -4222,38 +4222,51 @@ let isOnline = navigator.onLine;
 // ============================================================
 // SERVICE WORKER (Offline Support)
 // ============================================================
-const APP_VERSION = 'v5';
+const APP_VERSION = 'v6';
 const SW_SOURCE = `
-const CACHE_NAME = 'healing-ft-v5-${Date.now()}';
-const ASSETS = ['./'];
+const CACHE_NAME = 'healing-ft-v6-${Date.now()}';
+const NETWORK_TIMEOUT_MS = 4000;
+
+function isHtmlReq(req) {
+  return req.mode === 'navigate' ||
+    (req.headers.get('accept') || '').includes('text/html') ||
+    (req.url.endsWith('/') || req.url.endsWith('/index.html'));
+}
+
+async function safeFetch(req) {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), NETWORK_TIMEOUT_MS);
+    const res = await fetch(req, { signal: ctrl.signal, cache: 'no-cache' });
+    clearTimeout(t);
+    return res;
+  } catch(e) { return null; }
+}
 
 self.addEventListener('install', e => {
   self.skipWaiting();
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(c => c.addAll(ASSETS).catch(() => c.add('./')))
-  );
 });
 
 self.addEventListener('activate', e => {
   e.waitUntil(
     self.clients.claim()
-      .then(() => self.clients.matchAll({ type: 'window' }))
-      .then(clients => {
-        return Promise.all(clients.map(c => {
-          try {
-            c.postMessage({ type: 'SW_UPDATED', version: 'v5' });
-            if (c.url && c.url.indexOf('reload=v5') === -1) {
-              const u = new URL(c.url);
-              u.searchParams.set('reload', 'v5');
-              u.searchParams.set('t', Date.now().toString());
-              return c.navigate(u.toString()).catch(() => {});
-            }
-          } catch(err) { console.warn(err); }
-          return Promise.resolve();
-        }));
-      })
+      .then(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
+      .then(clients => Promise.all(clients.map(c => {
+        try {
+           c.postMessage({ type: 'SW_UPDATED', version: 'v6' });
+           if (c.url) {
+             const u = new URL(c.url);
+             if (u.searchParams.get('reload') !== 'v6') {
+               u.searchParams.set('reload', 'v6');
+               u.searchParams.set('t', Date.now().toString());
+               return c.navigate(u.toString()).catch(() => {});
+             }
+           }
+        } catch(err) { console.warn(err); }
+        return Promise.resolve();
+      })))
       .then(() => caches.keys())
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.map(k => caches.delete(k))))
   );
 });
 
@@ -4269,16 +4282,12 @@ self.addEventListener('fetch', e => {
     e.respondWith(fetch(req).catch(() => new Response('', { status: 503 })));
     return;
   }
-  const isNav = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
-  if (isNav) {
+  if (isHtmlReq(req)) {
     e.respondWith(
-      fetch(req).then(res => {
-        if (res && res.ok) {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put('./', clone));
-        }
-        return res;
-      }).catch(() => caches.match('./'))
+      safeFetch(req).then(networkRes => {
+        if (networkRes && networkRes.ok) return networkRes;
+        return caches.match('./') || new Response('Offline', { status: 503 });
+      })
     );
     return;
   }
@@ -4316,7 +4325,7 @@ async function registerServiceWorker() {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', (e) => {
     if (e.data && e.data.type === 'SW_UPDATED') {
-      try { localStorage.setItem('healing-ft-sw-version', e.data.version || 'v5'); } catch(x){}
+      try { localStorage.setItem('healing-ft-sw-version', e.data.version || 'v6'); } catch(x){}
       showUpdateBanner();
     }
   });
