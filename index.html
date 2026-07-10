@@ -7,7 +7,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ulcer Plan">
+<meta name="description" content="30-day ulcer recovery companion with meal planning, reminders, and progress tracking.">
 <title>Ulcer Recovery Plan</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%230288D1'/><stop offset='100%25' stop-color='%234FC3F7'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='url(%23g)'/><text x='50' y='72' font-size='62' text-anchor='middle' font-family='-apple-system,sans-serif'>🌊</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><defs><linearGradient id='g2' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%230288D1'/><stop offset='100%25' stop-color='%234FC3F7'/></linearGradient></defs><rect width='180' height='180' rx='38' fill='url(%23g2)'/><text x='90' y='130' font-size='110' text-anchor='middle' font-family='-apple-system,sans-serif'>🌊</text></svg>">
+<link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Ulcer%20Recovery%20Plan%22%2C%22short_name%22%3A%22Ulcer%20Plan%22%2C%22description%22%3A%2230-day%20ulcer%20recovery%20companion%20with%20meal%20planning%2C%20reminders%2C%20and%20progress%20tracking.%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%23F0F9FF%22%2C%22theme_color%22%3A%22%230288D1%22%2C%22categories%22%3A%5B%22health%22%2C%22lifestyle%22%2C%22medical%22%5D%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Butf8%2C%253Csvg%2520xmlns%253D%2527http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2527%2520viewBox%253D%25270%25200%252050%252050%2527%253E%253Crect%2520width%253D%2527100%2527%2520height%253D%2527100%2527%2520rx%253D%252722%2527%2520fill%253D%2527%25230288D1%2527%252F%253E%253Ctext%2520x%253D%252750%2527%2520y%253D%252772%2527%2520font-size%253D%252762%2527%2520text-anchor%253D%2527middle%2527%253E%F0%9F%8C%8A%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   
@@ -2243,6 +2247,11 @@ function startApp() {
   document.getElementById('app').classList.add('active');
   renderApp();
   celebrate();
+  setTimeout(() => {
+    if (!isAppInstalled && !deferredInstallPrompt) {
+      showInstallHelp();
+    }
+  }, 800);
 }
 
 function renderApp() {
@@ -3187,6 +3196,37 @@ function renderSettings() {
   const phoneDisplay = state.user.adminPhone ? '+' + state.user.adminPhone : 'Not set';
   const alarmsLabel = state.alarmsEnabled ? '🔔 ON' : '🔕 OFF';
   const permStatus = ('Notification' in window) ? Notification.permission : 'unsupported';
+  
+  let installButton = '';
+  if (isAppInstalled) {
+    installButton = `
+    <button class="setting-item" disabled style="opacity:0.6; cursor:default;">
+      <div class="setting-icon" style="background: var(--success-light);">✓</div>
+      <div class="setting-text">
+        <div class="setting-title" style="color: var(--success);">App installed</div>
+        <div class="setting-desc">Opens in standalone mode</div>
+      </div>
+    </button>`;
+  } else if (deferredInstallPrompt) {
+    installButton = `
+    <button class="setting-item" onclick="installApp()" style="border-left: 4px solid var(--primary);">
+      <div class="setting-icon" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white;">📲</div>
+      <div class="setting-text">
+        <div class="setting-title">Install app</div>
+        <div class="setting-desc">Add to home screen / Applications</div>
+      </div>
+    </button>`;
+  } else {
+    installButton = `
+    <button class="setting-item" onclick="installApp()" style="border-left: 4px solid var(--primary);">
+      <div class="setting-icon" style="background: var(--primary-lightest);">📲</div>
+      <div class="setting-text">
+        <div class="setting-title">Install app</div>
+        <div class="setting-desc">See install instructions for your device</div>
+      </div>
+    </button>`;
+  }
+  
   container.innerHTML = `
     <button class="setting-item" onclick="editName()">
       <div class="setting-icon">👤</div>
@@ -3209,6 +3249,7 @@ function renderSettings() {
         <div class="setting-desc">${phoneDisplay} · Sends daily report here</div>
       </div>
     </button>
+    ${installButton}
     <button class="setting-item" onclick="toggleAlarms()" style="border-left: 4px solid var(--primary);">
       <div class="setting-icon" style="background: var(--primary-lightest);">⏰</div>
       <div class="setting-text">
@@ -3560,6 +3601,74 @@ init();
 
 if (state.alarmsEnabled && 'Notification' in window && Notification.permission === 'default') {
   setTimeout(() => ensureNotificationPermission(), 3000);
+}
+
+// ============================================================
+// PWA INSTALL
+// ============================================================
+let deferredInstallPrompt = null;
+let isAppInstalled = false;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  renderSettings();
+});
+
+window.addEventListener('appinstalled', () => {
+  isAppInstalled = true;
+  deferredInstallPrompt = null;
+  showToast('✓ App installed!');
+  renderSettings();
+});
+
+if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+  isAppInstalled = true;
+}
+if (window.navigator && window.navigator.standalone === true) {
+  isAppInstalled = true;
+}
+
+async function installApp() {
+  if (!deferredInstallPrompt) {
+    showInstallHelp();
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  try {
+    const result = await deferredInstallPrompt.userChoice;
+    if (result.outcome === 'accepted') {
+      showToast('Installing…');
+    }
+    deferredInstallPrompt = null;
+    renderSettings();
+  } catch(e) {
+    console.warn(e);
+  }
+}
+
+function showInstallHelp() {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isMac = /Mac/i.test(navigator.userAgent);
+  const isWin = /Windows/i.test(navigator.userAgent);
+  
+  let steps = '';
+  if (isIOS) {
+    steps = `<strong>iPhone / iPad:</strong><ol style="padding-left:20px; margin-top:6px; line-height:1.7; font-size:13px;"><li>Tap the <strong>Share button</strong> (square with arrow ↑) at the bottom of Safari</li><li>Scroll down and tap <strong>"Add to Home Screen"</strong></li><li>Tap <strong>"Add"</strong> in the top-right</li><li>App opens fullscreen with the 🌊 icon</li></ol>`;
+  } else if (isAndroid) {
+    steps = `<strong>Android (Chrome):</strong><ol style="padding-left:20px; margin-top:6px; line-height:1.7; font-size:13px;"><li>Tap the <strong>three dots menu</strong> (⋮) top-right</li><li>Tap <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong></li><li>Tap <strong>"Install"</strong></li></ol>`;
+  } else if (isMac || isWin) {
+    steps = `<strong>Desktop (Chrome / Edge):</strong><ol style="padding-left:20px; margin-top:6px; line-height:1.7; font-size:13px;"><li>Look for the <strong>install icon</strong> (⊕ or computer icon) in your browser's URL bar</li><li>Click it → confirm <strong>"Install"</strong></li><li>App opens in its own window from your Applications/Programs folder</li><li>On macOS, it appears in Launchpad; on Windows, in Start Menu</li></ol><p style="font-size:12px; color: var(--text-light); margin-top:8px;">💡 Chrome's URL-bar install icon works on most desktop sites. Edge shows it more reliably.</p>`;
+  } else {
+    steps = `<strong>General install steps:</strong><ol style="padding-left:20px; margin-top:6px; line-height:1.7; font-size:13px;"><li>Look for <strong>"Install"</strong> or <strong>"Add to Home Screen"</strong> in your browser menu</li><li>On desktop: try Chrome or Edge for best support</li><li>On mobile: Safari (iOS) or Chrome (Android)</li></ol>`;
+  }
+  
+  showModal('📲 How to Install', `
+    <p style="font-size:14px; margin-bottom: 12px;">Add this app to your device for one-tap access, fullscreen mode, and better notifications:</p>
+    ${steps}
+    <p style="font-size:12px; color:var(--text-light); margin-top:14px;">💙 Once installed, the app works like a native app — no browser bar, runs in its own window, and can send meal reminders even when the tab isn't open.</p>
+  `, [{ label: 'Got it', class: 'btn-primary', action: 'closeModal()' }]);
 }
 
 setInterval(() => {
