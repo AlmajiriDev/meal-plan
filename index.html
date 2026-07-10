@@ -871,6 +871,11 @@
     font-size: 14px;
     font-weight: 600;
   }
+
+  @keyframes slideUpBanner {
+    from { transform: translateY(120%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
   
   /* ========== TABS ========== */
   .tab-content { display: none; }
@@ -3639,6 +3644,20 @@ function renderSettings() {
         <div class="setting-desc">Show me how the app works again</div>
       </div>
     </button>
+    <button class="setting-item" onclick="checkForUpdates()" style="border-left: 4px solid var(--success);">
+      <div class="setting-icon" style="background: var(--success-light);">🔄</div>
+      <div class="setting-text">
+        <div class="setting-title">Check for updates</div>
+        <div class="setting-desc">Get the latest version · Current: ${APP_VERSION}</div>
+      </div>
+    </button>
+    <button class="setting-item" onclick="forceClearAppCache()" style="border-left: 4px solid var(--warning);">
+      <div class="setting-icon" style="background: var(--warning-light);">🚿</div>
+      <div class="setting-text">
+        <div class="setting-title">Force clear app cache</div>
+        <div class="setting-desc">Use if updates aren't appearing</div>
+      </div>
+    </button>
     <button class="setting-item" onclick="resetTutorial()" style="border-left: 4px solid var(--primary-light);">
       <div class="setting-icon">🔄</div>
       <div class="setting-text">
@@ -3960,6 +3979,15 @@ if (state.alarmsEnabled && 'Notification' in window && Notification.permission =
   setTimeout(() => ensureNotificationPermission(), 3000);
 }
 
+if ('serviceWorker' in navigator) {
+  setTimeout(async () => {
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) await reg.update();
+    } catch(e) { console.warn(e); }
+  }, 8000);
+}
+
 // ============================================================
 // ============================================================
 // TUTORIAL
@@ -4188,9 +4216,10 @@ let isOnline = navigator.onLine;
 // ============================================================
 // SERVICE WORKER (Offline Support)
 // ============================================================
+const APP_VERSION = 'v5';
 const SW_SOURCE = `
-const CACHE_NAME = 'ulcer-plan-v' + (self.__CACHE_VER || 1);
-const ASSETS = ['./', './index.html', './README.md'];
+const CACHE_NAME = 'healing-ft-v5-${Date.now()}';
+const ASSETS = ['./'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -4204,7 +4233,16 @@ self.addEventListener('activate', e => {
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
+      .then(() => {
+        self.clients.matchAll().then(clients => {
+          clients.forEach(c => c.postMessage({ type: 'SW_UPDATED', version: 'v5' }));
+        });
+      })
   );
+});
+
+self.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', e => {
@@ -4212,8 +4250,19 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) {
+    e.respondWith(fetch(req).catch(() => new Response('', { status: 503 })));
+    return;
+  }
+  const isNav = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
+  if (isNav) {
     e.respondWith(
-      fetch(req).catch(() => new Response('', { status: 503 }))
+      fetch(req).then(res => {
+        if (res && res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put('./', clone));
+        }
+        return res;
+      }).catch(() => caches.match('./'))
     );
     return;
   }
@@ -4225,7 +4274,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE_NAME).then(c => c.put(req, clone));
         }
         return res;
-      }).catch(() => cached || caches.match('./') || caches.match('./index.html'));
+      }).catch(() => cached);
       return cached || fetched;
     })
   );
@@ -4245,6 +4294,93 @@ async function registerServiceWorker() {
   } catch(e) {
     console.warn('Service worker register failed:', e);
     return false;
+  }
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'SW_UPDATED') {
+      showUpdateBanner();
+    }
+  });
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    setTimeout(() => window.location.reload(), 800);
+  });
+}
+
+function showUpdateBanner() {
+  if (document.getElementById('updateBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'updateBanner';
+  banner.style.cssText = 'position:fixed; bottom: 90px; left:16px; right:16px; background: linear-gradient(135deg, var(--success) 0%, #66BB6A 100%); color: white; padding: 14px 16px; border-radius: 14px; box-shadow: 0 8px 24px rgba(67,160,71,0.4); z-index: 600; display:flex; align-items:center; gap: 10px; animation: slideUpBanner 0.4s ease;';
+  banner.innerHTML = `
+    <span style="font-size:24px;">🎉</span>
+    <div style="flex:1; font-size:14px; font-weight:600;">New version available!</div>
+    <button onclick="applyUpdate()" style="background:white; color:var(--success); padding:8px 14px; border-radius:8px; font-size:13px; font-weight:700;">Update</button>
+    <button onclick="document.getElementById('updateBanner').remove()" style="background:transparent; color:white; opacity:0.8; padding:8px; font-size:18px;">✕</button>
+  `;
+  document.body.appendChild(banner);
+}
+
+async function applyUpdate() {
+  if (!('serviceWorker' in navigator)) { window.location.reload(); return; }
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (reg && reg.waiting) {
+      reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      showToast('Updating...');
+    } else if (reg) {
+      await reg.update();
+      window.location.reload();
+    } else {
+      window.location.reload();
+    }
+  } catch(e) {
+    console.warn(e);
+    window.location.reload();
+  }
+}
+
+async function forceClearAppCache() {
+  if (!confirm('This will clear the app cache and reload. Useful if updates aren\'t showing. Continue?')) return;
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    showToast('✓ Cache cleared — reloading');
+    setTimeout(() => window.location.reload(), 600);
+  } catch(e) {
+    console.error(e);
+    showToast('Could not clear cache');
+  }
+}
+
+async function checkForUpdates() {
+  if (!('serviceWorker' in navigator)) { showToast('Updates not supported here'); return; }
+  showToast('Checking for updates...');
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) {
+      showToast('No service worker — try opening while online');
+      return;
+    }
+    await reg.update();
+    if (reg.waiting) {
+      showUpdateBanner();
+    } else {
+      showToast('✓ You\'re on the latest version');
+    }
+  } catch(e) {
+    console.warn(e);
+    showToast('Update check failed');
   }
 }
 
