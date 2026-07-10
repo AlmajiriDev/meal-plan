@@ -598,6 +598,152 @@
     margin-top: 2px;
     font-style: italic;
   }
+
+  /* ========== ALARMS / COUNTDOWN ========== */
+  .next-meal-card {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .next-meal-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .next-meal-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.85;
+    font-weight: 600;
+  }
+
+  .next-meal-name {
+    font-size: 20px;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  .next-meal-time-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+  }
+
+  .next-meal-time {
+    font-size: 13px;
+    opacity: 0.95;
+  }
+
+  .countdown {
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    background: rgba(255,255,255,0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+  }
+
+  .countdown.urgent {
+    background: var(--warning);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .countdown.now {
+    background: var(--success);
+    animation: pulse 0.8s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  .alarm-floating {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: white;
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    z-index: 500;
+    text-align: center;
+    max-width: 320px;
+    width: 90%;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .alarm-floating.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+  }
+
+  .alarm-icon {
+    font-size: 56px;
+    margin-bottom: 12px;
+    animation: ring 1s ease-in-out infinite;
+  }
+
+  @keyframes ring {
+    0%, 100% { transform: rotate(-10deg); }
+    50% { transform: rotate(10deg); }
+  }
+
+  .alarm-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary-darker);
+    margin-bottom: 6px;
+  }
+
+  .alarm-message {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .alarm-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .alarm-buttons button { flex: 1; }
+
+  .alarm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13, 71, 161, 0.4);
+    z-index: 499;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .alarm-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
   
   /* ========== TABS ========== */
   .tab-content { display: none; }
@@ -1008,6 +1154,16 @@
   
   <!-- TODAY TAB -->
   <div class="content tab-content active" id="tab-today">
+    <div class="section-title">⏰ Next Meal</div>
+    <div class="next-meal-card" id="nextMealCard">
+      <div class="next-meal-label">Up next</div>
+      <div class="next-meal-name" id="nextMealName">Loading…</div>
+      <div class="next-meal-time-row">
+        <div class="next-meal-time" id="nextMealTime">at —</div>
+        <div class="countdown" id="nextMealCountdown">—</div>
+      </div>
+    </div>
+    
     <div class="section-title">💌 Daily Inspiration</div>
     <div class="tracker-card" id="quoteCard" onclick="newQuote()" style="cursor:pointer; background: linear-gradient(135deg, var(--primary-lightest) 0%, white 100%); border-left: 4px solid var(--primary);">
       <div style="text-align:center; font-size:15px; line-height:1.6; color: var(--text); padding: 8px 4px;" id="quoteText">
@@ -1284,10 +1440,30 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- Alarm Overlay -->
+<div class="alarm-overlay" id="alarmOverlay" onclick="dismissAlarm()"></div>
+<div class="alarm-floating" id="alarmFloating">
+  <div class="alarm-icon" id="alarmIcon">🔔</div>
+  <div class="alarm-title" id="alarmTitle">Meal time soon!</div>
+  <div class="alarm-message" id="alarmMessage">Start preparing your Morning meal in 15 minutes.</div>
+  <div class="alarm-buttons">
+    <button class="btn-secondary" onclick="dismissAlarm()">Snooze 5 min</button>
+    <button class="btn-primary" onclick="acknowledgeAlarm()" style="background: var(--success);">Got it ✓</button>
+  </div>
+</div>
+
 <script>
 // ============================================================
 // DATA
 // ============================================================
+const mealSchedule = [
+  { id: 'morning',    time: '06:30', prepMin: 15, label: 'Morning' },
+  { id: 'midMorning', time: '09:30', prepMin: 5,  label: 'Mid-Morning' },
+  { id: 'afternoon',  time: '13:00', prepMin: 25, label: 'Afternoon' },
+  { id: 'evening',    time: '17:00', prepMin: 15, label: 'Evening' },
+  { id: 'nightcap',   time: '20:00', prepMin: 10, label: 'Nightcap' }
+];
+
 const planData = {
   1: {
     meals: [
@@ -1964,7 +2140,9 @@ const defaultState = () => ({
   days: {},
   lastSharedDate: '',
   shoppingChecked: {},
-  shoppingWeekStart: ''
+  shoppingWeekStart: '',
+  alarmsEnabled: true,
+  alarmTimers: {}
 });
 
 function getDayState(dayNum) {
@@ -2070,6 +2248,8 @@ function renderApp() {
   renderQuote();
   renderLoveNote();
   renderShoppingList();
+  updateNextMealDisplay();
+  scheduleAllAlarms();
   checkSharePrompt();
 }
 
@@ -2144,7 +2324,13 @@ function toggleMeal(mealId) {
   dayState.meals[mealId].eaten = !dayState.meals[mealId].eaten;
   saveState();
   renderMeals();
+  updateNextMealDisplay();
   checkSharePrompt();
+  if (dayState.meals[mealId].eaten) {
+    scheduleAllAlarms();
+  } else {
+    scheduleAllAlarms();
+  }
   if (navigator.vibrate) navigator.vibrate(20);
   
   const allEaten = Object.values(dayState.meals).every(m => m.eaten);
@@ -2461,6 +2647,210 @@ function dismissReminder() {
 }
 
 // ============================================================
+// ALARMS / REMINDERS
+// ============================================================
+let notificationPermissionAsked = false;
+
+function parseTimeToToday(timeStr) {
+  const [h, m] = timeStr.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+
+function getNextMealInfo() {
+  const dayNum = getCurrentDay();
+  const dayState = getDayState(dayNum);
+  const now = new Date();
+  
+  for (const m of mealSchedule) {
+    const mealTime = parseTimeToToday(m.time);
+    const prepNotifTime = new Date(mealTime.getTime() - m.prepMin * 60000);
+    if (dayState.meals[m.id].eaten) continue;
+    if (mealTime > now) return { meal: m, mealTime, prepNotifTime };
+  }
+  return null;
+}
+
+function updateNextMealDisplay() {
+  const info = getNextMealInfo();
+  const nameEl = document.getElementById('nextMealName');
+  const timeEl = document.getElementById('nextMealTime');
+  const cdEl = document.getElementById('nextMealCountdown');
+  
+  if (!info) {
+    if (nameEl) nameEl.textContent = '🎉 All meals done for today!';
+    if (timeEl) timeEl.textContent = 'Rest well, see you tomorrow';
+    if (cdEl) { cdEl.textContent = '✓'; cdEl.className = 'countdown now'; }
+    return;
+  }
+  
+  if (nameEl) nameEl.textContent = info.meal.label;
+  if (timeEl) timeEl.textContent = `at ${info.meal.time} · prep starts ${info.meal.prepMin} min before`;
+  
+  const ms = info.mealTime - new Date();
+  const totalMin = Math.floor(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  let cdText = h > 0 ? `${h}h ${m}m` : `${m}m`;
+  if (cdText === '0m' || totalMin < 0) cdText = 'Now!';
+  if (cdEl) {
+    cdEl.textContent = cdText;
+    cdEl.className = 'countdown' + (totalMin <= 0 ? ' now' : totalMin <= 30 ? ' urgent' : '');
+  }
+}
+
+function clearAllAlarmTimers() {
+  if (state.alarmTimers) {
+    Object.values(state.alarmTimers).forEach(t => clearTimeout(t));
+  }
+  state.alarmTimers = {};
+}
+
+function scheduleAllAlarms() {
+  clearAllAlarmTimers();
+  if (!state.alarmsEnabled) return;
+  
+  const dayNum = getCurrentDay();
+  const dayState = getDayState(dayNum);
+  if (!dayState) return;
+  
+  const now = new Date();
+  
+  mealSchedule.forEach(m => {
+    if (dayState.meals[m.id].eaten) return;
+    const mealTime = parseTimeToToday(m.time);
+    const prepNotifTime = new Date(mealTime.getTime() - m.prepMin * 60000);
+    const ms = prepNotifTime - now;
+    
+    if (ms > 0 && ms < 24 * 60 * 60000) {
+      const timerId = setTimeout(() => triggerAlarm(m.id), ms);
+      state.alarmTimers[m.id] = timerId;
+    } else if (ms <= 0 && mealTime > now) {
+      const seconds = (mealTime - now) / 1000;
+      const ringerId = setTimeout(() => triggerAlarm(m.id, 'mealTime'), Math.min(seconds * 1000, 2147483647));
+      state.alarmTimers[m.id + '_mealTime'] = ringerId;
+    }
+  });
+  saveState();
+}
+
+function triggerAlarm(mealId, type) {
+  const meal = mealSchedule.find(m => m.id === mealId);
+  if (!meal) return;
+  
+  const dayState = getDayState(getCurrentDay());
+  if (dayState.meals[mealId].eaten) return;
+  
+  playBeep();
+  if (navigator.vibrate) {
+    navigator.vibrate([200, 100, 200, 100, 200]);
+  }
+  
+  const isMealTime = type === 'mealTime';
+  const iconEl = document.getElementById('alarmIcon');
+  const titleEl = document.getElementById('alarmTitle');
+  const msgEl = document.getElementById('alarmMessage');
+  
+  if (isMealTime) {
+    if (iconEl) iconEl.textContent = '🍽️';
+    if (titleEl) titleEl.textContent = `It's ${meal.label} time!`;
+    if (msgEl) msgEl.textContent = `Time to eat your ${meal.label.toLowerCase()} meal at ${meal.time}.`;
+  } else {
+    if (iconEl) iconEl.textContent = '🔔';
+    if (titleEl) titleEl.textContent = `${meal.label} coming up!`;
+    if (msgEl) msgEl.textContent = `Start preparing in ${meal.prepMin} minutes. Time: ${meal.time}.`;
+  }
+  
+  document.getElementById('alarmOverlay').classList.add('show');
+  document.getElementById('alarmFloating').classList.add('show');
+  
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try {
+      new Notification(`🌊 ${meal.label} reminder`, {
+        body: isMealTime ? `Time for ${meal.label} at ${meal.time}` : `Start prep in ${meal.prepMin}min for ${meal.label} (${meal.time})`,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="80" font-size="80">🌊</text></svg>',
+        tag: `meal-${mealId}`,
+        requireInteraction: false,
+        silent: false
+      });
+    } catch(e) { console.warn(e); }
+  }
+}
+
+function dismissAlarm() {
+  document.getElementById('alarmOverlay').classList.remove('show');
+  document.getElementById('alarmFloating').classList.remove('show');
+  
+  const now = new Date();
+  mealSchedule.forEach(m => {
+    const mealTime = parseTimeToToday(m.time);
+    const now2 = new Date();
+    if (mealTime > now2) {
+      const ms = 5 * 60 * 1000;
+      if (state.alarmTimers[m.id]) clearTimeout(state.alarmTimers[m.id]);
+      state.alarmTimers[m.id] = setTimeout(() => triggerAlarm(m.id), ms);
+    }
+  });
+  saveState();
+}
+
+function acknowledgeAlarm() {
+  document.getElementById('alarmOverlay').classList.remove('show');
+  document.getElementById('alarmFloating').classList.remove('show');
+  showToast('✓ Got it!');
+}
+
+function playBeep() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const notes = [880, 1100, 1320];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const start = ctx.currentTime + i * 0.18;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.25, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.4);
+      osc.start(start);
+      osc.stop(start + 0.5);
+    });
+  } catch(e) { console.warn(e); }
+}
+
+async function ensureNotificationPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+  if (notificationPermissionAsked) return false;
+  notificationPermissionAsked = true;
+  try {
+    const result = await Notification.requestPermission();
+    return result === 'granted';
+  } catch(e) { return false; }
+}
+
+function toggleAlarms() {
+  state.alarmsEnabled = !state.alarmsEnabled;
+  saveState();
+  if (state.alarmsEnabled) {
+    scheduleAllAlarms();
+    ensureNotificationPermission();
+    showToast('⏰ Meal reminders ON');
+  } else {
+    clearAllAlarmTimers();
+    showToast('Meal reminders OFF');
+  }
+  renderSettings();
+}
+
+// ============================================================
 // SHOPPING LIST
 // ============================================================
 function getWeekStart() {
@@ -2680,6 +3070,8 @@ function renderAchievements() {
 function renderSettings() {
   const container = document.getElementById('settingsContainer');
   const phoneDisplay = state.user.adminPhone ? '+' + state.user.adminPhone : 'Not set';
+  const alarmsLabel = state.alarmsEnabled ? '🔔 ON' : '🔕 OFF';
+  const permStatus = ('Notification' in window) ? Notification.permission : 'unsupported';
   container.innerHTML = `
     <button class="setting-item" onclick="editName()">
       <div class="setting-icon">👤</div>
@@ -2700,6 +3092,20 @@ function renderSettings() {
       <div class="setting-text">
         <div class="setting-title">WhatsApp number</div>
         <div class="setting-desc">${phoneDisplay} · Sends daily report here</div>
+      </div>
+    </button>
+    <button class="setting-item" onclick="toggleAlarms()" style="border-left: 4px solid var(--primary);">
+      <div class="setting-icon" style="background: var(--primary-lightest);">⏰</div>
+      <div class="setting-text">
+        <div class="setting-title">Meal reminders ${alarmsLabel}</div>
+        <div class="setting-desc">Alerts you ${state.alarmsEnabled ? 'before' : 'OFF · tap to enable'} each meal · Browser: ${permStatus}</div>
+      </div>
+    </button>
+    <button class="setting-item" onclick="showAlarmSchedule()">
+      <div class="setting-icon">📋</div>
+      <div class="setting-text">
+        <div class="setting-title">View alarm schedule</div>
+        <div class="setting-desc">See when each reminder fires</div>
       </div>
     </button>
     <button class="setting-item" onclick="window.print()">
@@ -2747,6 +3153,34 @@ function editAdminPhone() {
     renderSettings();
     showToast('WhatsApp number saved');
   }
+}
+
+function showAlarmSchedule() {
+  const rows = mealSchedule.map(m => {
+    const [h, mm] = m.time.split(':').map(Number);
+    const alarmH = Math.max(0, h);
+    let alarmMins = mm - m.prepMin;
+    let alarmH2 = alarmH;
+    while (alarmMins < 0) { alarmMins += 60; alarmH2 = (alarmH2 - 1 + 24) % 24; }
+    const alarmTime = `${String(alarmH2).padStart(2,'0')}:${String(alarmMins).padStart(2,'0')}`;
+    return `<tr><td style="padding:6px; border-bottom:1px solid var(--primary-lightest);"><strong>${m.label}</strong></td><td style="padding:6px; border-bottom:1px solid var(--primary-lightest);">${m.time}</td><td style="padding:6px; border-bottom:1px solid var(--primary-lightest); color: var(--primary-dark); font-weight:600;">${alarmTime}</td><td style="padding:6px; border-bottom:1px solid var(--primary-lightest);">${m.prepMin} min before</td></tr>`;
+  }).join('');
+  
+  showModal('⏰ Meal Alarm Schedule', `
+    <p style="font-size:13px;">Reminders fire this many minutes before each meal so you have time to prepare:</p>
+    <table style="width:100%; font-size:13px; border-collapse:collapse;">
+      <thead>
+        <tr style="background: var(--primary-lightest);">
+          <th style="padding:8px 6px; text-align:left;">Meal</th>
+          <th style="padding:8px 6px; text-align:left;">Eat at</th>
+          <th style="padding:8px 6px; text-align:left;">Reminder</th>
+          <th style="padding:8px 6px; text-align:left;">Lead</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p style="font-size:12px; color:var(--text-light); margin-top:12px;">💡 Reminders only fire while the app is open in your browser. For the alarm to work, keep the app tab open or installed as a home screen app.</p>
+  `, [{ label: 'Got it', class: 'btn-primary', action: 'closeModal()' }]);
 }
 
 function editName() {
@@ -2860,11 +3294,41 @@ function celebrate() {
 // ============================================================
 init();
 
+if (state.alarmsEnabled && 'Notification' in window && Notification.permission === 'default') {
+  setTimeout(() => ensureNotificationPermission(), 3000);
+}
+
 setInterval(() => {
   if (document.getElementById('app').classList.contains('active')) {
     checkSharePrompt();
+    updateNextMealDisplay();
+  }
+}, 30000);
+
+setInterval(() => {
+  if (document.getElementById('app').classList.contains('active')) {
+    const newDay = getCurrentDay();
+    if (!state._lastDayKnown || state._lastDayKnown !== newDay) {
+      state._lastDayKnown = newDay;
+      saveState();
+      scheduleAllAlarms();
+      renderLoveNote();
+      renderMeals();
+      renderWater();
+      renderCheckin();
+      renderProgress();
+      renderQuote();
+      updateNextMealDisplay();
+    }
   }
 }, 60000);
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && document.getElementById('app').classList.contains('active')) {
+    updateNextMealDisplay();
+    scheduleAllAlarms();
+  }
+});
 </script>
 </body>
 </html>
