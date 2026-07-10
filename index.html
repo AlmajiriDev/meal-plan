@@ -2472,6 +2472,16 @@ function formatDate(date) {
 // ============================================================
 function init() {
   if (loadState() && state.user.name && state.user.startDate) {
+    const def = defaultState();
+    if (!state.user.bedtime) state.user.bedtime = def.user.bedtime;
+    if (!state.conditions) state.conditions = def.conditions;
+    if (!state.user.customMealTimes) state.user.customMealTimes = {};
+    if (!state.user.customPrepTimes) state.user.customPrepTimes = {};
+    if (state.shoppingWeekStart === undefined) state.shoppingWeekStart = '';
+    if (state.alarmsEnabled === undefined) state.alarmsEnabled = true;
+    if (!state.alarmTimers) state.alarmTimers = {};
+    if (state.tutorialCompleted === undefined) state.tutorialCompleted = false;
+    saveState();
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('app').classList.add('active');
     renderApp();
@@ -2507,21 +2517,25 @@ function startApp() {
 }
 
 function renderApp() {
-  renderHeader();
-  renderMeals();
-  renderWater();
-  renderCheckin();
-  renderProgress();
-  renderSettings();
-  setupRangeListeners();
-  renderQuote();
-  renderLoveNote();
-  renderShoppingList();
-  updateNextMealDisplay();
-  scheduleAllAlarms();
-  checkSharePrompt();
-  renderConditionsBanner();
-  applyConditionReminders();
+  const safeRun = (name, fn) => {
+    try { fn(); }
+    catch(e) { console.error(`[renderApp] ${name} failed:`, e); }
+  };
+  safeRun('renderHeader', renderHeader);
+  safeRun('renderMeals', renderMeals);
+  safeRun('renderWater', renderWater);
+  safeRun('renderCheckin', renderCheckin);
+  safeRun('renderProgress', renderProgress);
+  safeRun('renderSettings', renderSettings);
+  safeRun('setupRangeListeners', setupRangeListeners);
+  safeRun('renderQuote', renderQuote);
+  safeRun('renderLoveNote', renderLoveNote);
+  safeRun('renderShoppingList', renderShoppingList);
+  safeRun('updateNextMealDisplay', updateNextMealDisplay);
+  safeRun('scheduleAllAlarms', scheduleAllAlarms);
+  safeRun('checkSharePrompt', checkSharePrompt);
+  safeRun('renderConditionsBanner', renderConditionsBanner);
+  safeRun('applyConditionReminders', applyConditionReminders);
 }
 
 function renderConditionsBanner() {
