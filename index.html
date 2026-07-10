@@ -2136,7 +2136,7 @@ const defaultDayState = () => ({
 });
 
 const defaultState = () => ({
-  user: { name: '', startDate: '', adminPhone: '2348157102237' },
+  user: { name: '', startDate: '', adminPhone: '2348157102237', customPrepTimes: {} },
   days: {},
   lastSharedDate: '',
   shoppingChecked: {},
@@ -2707,6 +2707,13 @@ function clearAllAlarmTimers() {
   state.alarmTimers = {};
 }
 
+function getPrepMin(mealId) {
+  const custom = state.user && state.user.customPrepTimes;
+  if (custom && typeof custom[mealId] === 'number') return custom[mealId];
+  const def = mealSchedule.find(m => m.id === mealId);
+  return def ? def.prepMin : 15;
+}
+
 function scheduleAllAlarms() {
   clearAllAlarmTimers();
   if (!state.alarmsEnabled) return;
@@ -2720,7 +2727,8 @@ function scheduleAllAlarms() {
   mealSchedule.forEach(m => {
     if (dayState.meals[m.id].eaten) return;
     const mealTime = parseTimeToToday(m.time);
-    const prepNotifTime = new Date(mealTime.getTime() - m.prepMin * 60000);
+    const prepMin = getPrepMin(m.id);
+    const prepNotifTime = new Date(mealTime.getTime() - prepMin * 60000);
     const ms = prepNotifTime - now;
     
     if (ms > 0 && ms < 24 * 60 * 60000) {
@@ -3157,30 +3165,75 @@ function editAdminPhone() {
 
 function showAlarmSchedule() {
   const rows = mealSchedule.map(m => {
+    const prepMin = getPrepMin(m.id);
+    const isCustom = state.user.customPrepTimes && typeof state.user.customPrepTimes[m.id] === 'number';
     const [h, mm] = m.time.split(':').map(Number);
     const alarmH = Math.max(0, h);
-    let alarmMins = mm - m.prepMin;
+    let alarmMins = mm - prepMin;
     let alarmH2 = alarmH;
     while (alarmMins < 0) { alarmMins += 60; alarmH2 = (alarmH2 - 1 + 24) % 24; }
     const alarmTime = `${String(alarmH2).padStart(2,'0')}:${String(alarmMins).padStart(2,'0')}`;
-    return `<tr><td style="padding:6px; border-bottom:1px solid var(--primary-lightest);"><strong>${m.label}</strong></td><td style="padding:6px; border-bottom:1px solid var(--primary-lightest);">${m.time}</td><td style="padding:6px; border-bottom:1px solid var(--primary-lightest); color: var(--primary-dark); font-weight:600;">${alarmTime}</td><td style="padding:6px; border-bottom:1px solid var(--primary-lightest);">${m.prepMin} min before</td></tr>`;
+    return `
+      <tr>
+        <td style="padding:8px 6px; border-bottom:1px solid var(--primary-lightest);"><strong>${m.label}</strong></td>
+        <td style="padding:8px 6px; border-bottom:1px solid var(--primary-lightest);">${m.time}</td>
+        <td style="padding:8px 6px; border-bottom:1px solid var(--primary-lightest); color: var(--primary-dark); font-weight:600;">${alarmTime}</td>
+        <td style="padding:8px 6px; border-bottom:1px solid var(--primary-lightest);">
+          <input type="number" min="0" max="120" value="${prepMin}" 
+                 onchange="updatePrepTime('${m.id}', this.value)"
+                 style="width:60px; padding:4px 6px; border:2px solid var(--primary-lighter); border-radius:6px; font-size:13px; text-align:center;">
+          ${isCustom ? '<span style="font-size:10px; color: var(--primary-dark); margin-left:4px;">✏️</span>' : ''}
+        </td>
+      </tr>
+    `;
   }).join('');
   
-  showModal('⏰ Meal Alarm Schedule', `
-    <p style="font-size:13px;">Reminders fire this many minutes before each meal so you have time to prepare:</p>
+  showModal('⏰ Customize Alarm Schedule', `
+    <p style="font-size:13px;">Set how many minutes <em>before</em> each meal you want to be reminded. Edit numbers & tap Save.</p>
     <table style="width:100%; font-size:13px; border-collapse:collapse;">
       <thead>
         <tr style="background: var(--primary-lightest);">
-          <th style="padding:8px 6px; text-align:left;">Meal</th>
-          <th style="padding:8px 6px; text-align:left;">Eat at</th>
-          <th style="padding:8px 6px; text-align:left;">Reminder</th>
-          <th style="padding:8px 6px; text-align:left;">Lead</th>
+          <th style="padding:6px; text-align:left; font-size:11px;">Meal</th>
+          <th style="padding:6px; text-align:left; font-size:11px;">Eat at</th>
+          <th style="padding:6px; text-align:left; font-size:11px;">Reminder</th>
+          <th style="padding:6px; text-align:left; font-size:11px;">Lead (min)</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
     </table>
-    <p style="font-size:12px; color:var(--text-light); margin-top:12px;">💡 Reminders only fire while the app is open in your browser. For the alarm to work, keep the app tab open or installed as a home screen app.</p>
-  `, [{ label: 'Got it', class: 'btn-primary', action: 'closeModal()' }]);
+    <p style="font-size:12px; color:var(--text-light); margin-top:12px;">💡 Tips: Rice + protein = 25–30 min. Just fruit = 0–5 min. Adjust to your kitchen pace.</p>
+    <p style="font-size:11px; color: var(--text-muted); margin-top:8px;">ⓘ Reminders only fire while the app is open in your browser.</p>
+  `, [
+    { label: '🔄 Reset defaults', class: 'btn-secondary', action: 'resetPrepTimes()' },
+    { label: 'Save', class: 'btn-primary', action: 'savePrepTimes()' }
+  ]);
+}
+
+function updatePrepTime(mealId, value) {
+  const mins = parseInt(value);
+  if (isNaN(mins) || mins < 0 || mins > 120) {
+    showToast('Enter 0–120 minutes');
+    return;
+  }
+  if (!state.user.customPrepTimes) state.user.customPrepTimes = {};
+  state.user.customPrepTimes[mealId] = mins;
+  showAlarmSchedule();
+}
+
+function resetPrepTimes() {
+  if (!confirm('Reset all prep times to defaults?')) return;
+  state.user.customPrepTimes = {};
+  saveState();
+  showAlarmSchedule();
+  scheduleAllAlarms();
+  showToast('Prep times reset to defaults');
+}
+
+function savePrepTimes() {
+  saveState();
+  scheduleAllAlarms();
+  closeModal();
+  showToast('✓ Schedule saved');
 }
 
 function editName() {
