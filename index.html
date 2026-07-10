@@ -4267,6 +4267,11 @@ function updateOnlineStatus() {
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 
+window.addEventListener('error', (e) => {
+  console.error('[window.onerror]', e.error || e.message);
+  try { showToast('⚠️ ' + ((e.error && e.error.message) || e.message || 'JS error')); } catch(x){}
+});
+
 registerServiceWorker();
 
 window.addEventListener('beforeinstallprompt', (e) => {
