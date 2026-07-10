@@ -2519,7 +2519,10 @@ function startApp() {
 function renderApp() {
   const safeRun = (name, fn) => {
     try { fn(); }
-    catch(e) { console.error(`[renderApp] ${name} failed:`, e); }
+    catch(e) {
+      console.error(`[renderApp] ${name} failed:`, e);
+      try { showToast(`⚠️ ${name}: ${e.message || 'error'}`); } catch(x){}
+    }
   };
   safeRun('renderHeader', renderHeader);
   safeRun('renderMeals', renderMeals);
