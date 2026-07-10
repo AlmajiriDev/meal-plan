@@ -748,6 +748,129 @@
     opacity: 1;
     pointer-events: auto;
   }
+
+  /* ========== TUTORIAL ========== */
+  .tutorial-spotlight {
+    position: fixed;
+    border-radius: 12px;
+    box-shadow: 0 0 0 9999px rgba(13, 71, 161, 0.75), 0 0 0 4px var(--primary), 0 0 20px rgba(255,255,255,0.5);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 999;
+    pointer-events: none;
+  }
+
+  .tutorial-card {
+    position: fixed;
+    background: white;
+    border-radius: 16px;
+    padding: 22px;
+    width: 90%;
+    max-width: 320px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    z-index: 1001;
+    transform: scale(0.9);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .tutorial-card.show {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  .tutorial-card.top { bottom: auto; }
+  .tutorial-card.bottom { top: auto; }
+
+  .tutorial-arrow {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: white;
+    transform: rotate(45deg);
+  }
+
+  .tutorial-arrow.top { bottom: -7px; left: 50%; margin-left: -7px; }
+  .tutorial-arrow.bottom { top: -7px; left: 50%; margin-left: -7px; }
+
+  .tutorial-step-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+
+  .tutorial-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-darker);
+    margin-bottom: 6px;
+  }
+
+  .tutorial-text {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .tutorial-progress {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+
+  .tutorial-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--primary-lighter);
+    transition: all 0.2s;
+  }
+
+  .tutorial-dot.active {
+    background: var(--primary);
+    width: 18px;
+    border-radius: 3px;
+  }
+
+  .tutorial-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .tutorial-buttons .skip {
+    background: none;
+    color: var(--text-light);
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  .tutorial-buttons .next {
+    flex: 1;
+    background: var(--primary);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .tutorial-buttons .back {
+    background: var(--primary-lightest);
+    color: var(--primary-dark);
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+  }
   
   /* ========== TABS ========== */
   .tab-content { display: none; }
@@ -2146,7 +2269,8 @@ const defaultState = () => ({
   shoppingChecked: {},
   shoppingWeekStart: '',
   alarmsEnabled: true,
-  alarmTimers: {}
+  alarmTimers: {},
+  tutorialCompleted: false
 });
 
 const MEAL_TIME_RULES = {
@@ -2248,10 +2372,12 @@ function startApp() {
   renderApp();
   celebrate();
   setTimeout(() => {
-    if (!isAppInstalled && !deferredInstallPrompt) {
+    if (!state.tutorialCompleted) {
+      startTutorial();
+    } else if (!isAppInstalled && !deferredInstallPrompt) {
       showInstallHelp();
     }
-  }, 800);
+  }, 1200);
 }
 
 function renderApp() {
@@ -3299,6 +3425,20 @@ function renderSettings() {
         <div class="setting-desc">Quick reminder of the non-negotiables</div>
       </div>
     </button>
+    <button class="setting-item" onclick="replayTutorial()">
+      <div class="setting-icon">💡</div>
+      <div class="setting-text">
+        <div class="setting-title">Replay guided tour</div>
+        <div class="setting-desc">Show me how the app works again</div>
+      </div>
+    </button>
+    <button class="setting-item" onclick="resetTutorial()" style="border-left: 4px solid var(--primary-light);">
+      <div class="setting-icon">🔄</div>
+      <div class="setting-text">
+        <div class="setting-title">Restart tour on next launch</div>
+        <div class="setting-desc">${state.tutorialCompleted ? 'Tour will play automatically on reopen' : 'Tour will play on reopen'}</div>
+      </div>
+    </button>
     <button class="setting-item" onclick="clearAllData()" style="border-left: 4px solid var(--danger);">
       <div class="setting-icon" style="background: var(--danger-light);">🗑️</div>
       <div class="setting-text">
@@ -3439,6 +3579,13 @@ function finishMealTimes() {
   scheduleAllAlarms();
   updateNextMealDisplay();
   renderSettings();
+}
+
+function resetTutorial() {
+  state.tutorialCompleted = false;
+  saveState();
+  renderSettings();
+  showToast('Tour will play on next launch');
 }
 
 function editBedtime() {
@@ -3601,6 +3748,224 @@ init();
 
 if (state.alarmsEnabled && 'Notification' in window && Notification.permission === 'default') {
   setTimeout(() => ensureNotificationPermission(), 3000);
+}
+
+// ============================================================
+// ============================================================
+// TUTORIAL
+// ============================================================
+const tutorialSteps = [
+  {
+    icon: '👋',
+    title: 'Welcome to your healing journey!',
+    text: 'This is your 30-day ulcer recovery companion. Let me show you around — takes 30 seconds.',
+    target: null,
+    position: 'center',
+    action: null
+  },
+  {
+    icon: '⏰',
+    title: 'Next meal countdown',
+    text: 'At the top, you\'ll see when your next meal is. It counts down live and turns urgent when it\'s almost time.',
+    target: '#nextMealCard',
+    position: 'bottom',
+    action: null
+  },
+  {
+    icon: '🍽️',
+    title: 'Mark each meal as eaten',
+    text: 'Tap the round checkmark next to a meal to mark it done. If a food isn\'t available, you can swap to a cold-day version or fruit instead.',
+    target: '#mealsContainer',
+    position: 'top',
+    action: null
+  },
+  {
+    icon: '🍌',
+    title: 'Need a fruit-only break?',
+    text: 'If your stomach is too sore for a full meal, the Daily Inspiration quote card and fruit options have you covered. Fruits are gentle medicine.',
+    target: '#quoteCard',
+    position: 'top',
+    action: null
+  },
+  {
+    icon: '💧',
+    title: 'Drink water',
+    text: 'Tap each glass as you drink. Aim for 6–8 glasses of warm water a day — and never with meals.',
+    target: '#waterGlasses',
+    position: 'top',
+    action: null
+  },
+  {
+    icon: '📊',
+    title: 'Track your day',
+    text: 'Log weight, symptoms and energy. These help your love see your progress and help your doctor fine-tune treatment.',
+    target: '.tracker-card',
+    position: 'top',
+    action: null
+  },
+  {
+    icon: '📤',
+    title: 'Share your progress',
+    text: 'When you\'ve eaten or just want him to know how you\'re doing, tap the green Share button. It opens WhatsApp with your daily report ready.',
+    target: '#shareDailyBtn',
+    position: 'top',
+    action: null
+  },
+  {
+    icon: '🔔',
+    title: 'Meal reminders',
+    text: 'I\'ll beep and vibrate 5–25 minutes before each meal so you have time to cook. Customize prep time and meal times in Settings.',
+    target: null,
+    position: 'center',
+    action: 'settings'
+  },
+  {
+    icon: '📲',
+    title: 'Install for best experience',
+    text: 'Last tip: install this app to your home screen (or desktop). It runs fullscreen, works offline, and reminders fire more reliably.',
+    target: null,
+    position: 'center',
+    action: null
+  },
+  {
+    icon: '💙',
+    title: 'You\'re all set!',
+    text: 'Powered by Love. WithoutLoveWeAreNothing. Now go heal — one meal at a time.',
+    target: null,
+    position: 'center',
+    action: null
+  }
+];
+
+let tutorialStep = 0;
+let tutorialActive = false;
+
+function startTutorial() {
+  tutorialActive = true;
+  tutorialStep = 0;
+  document.getElementById('tutorialSkip').textContent = 'Skip tour';
+  renderTutorialStep();
+}
+
+function renderTutorialStep() {
+  const step = tutorialSteps[tutorialStep];
+  const spotlight = document.getElementById('tutorialSpotlight');
+  const card = document.getElementById('tutorialCard');
+  const arrow = document.getElementById('tutorialArrow');
+  
+  document.getElementById('tutorialIcon').textContent = step.icon;
+  document.getElementById('tutorialTitle').textContent = step.title;
+  document.getElementById('tutorialText').textContent = step.text;
+  
+  const progress = document.getElementById('tutorialProgress');
+  progress.innerHTML = tutorialSteps.map((_, i) => {
+    return `<div class="tutorial-dot ${i === tutorialStep ? 'active' : ''}"></div>`;
+  }).join('');
+  
+  const isLast = tutorialStep === tutorialSteps.length - 1;
+  const isFirst = tutorialStep === 0;
+  document.getElementById('tutorialBack').style.display = isFirst ? 'none' : 'block';
+  document.getElementById('tutorialNext').textContent = isLast ? 'Let\'s begin! 💙' : 'Next →';
+  
+  if (step.action === 'settings') {
+    switchTab('settings');
+  } else if (step.action === null && tutorialStep > 0) {
+    switchTab('today');
+  }
+  
+  setTimeout(() => {
+    if (!step.target) {
+      spotlight.style.display = 'none';
+      card.classList.remove('top', 'bottom');
+      arrow.classList.remove('top', 'bottom');
+      card.style.top = '50%';
+      card.style.left = '50%';
+      card.style.transform = 'translate(-50%, -50%) scale(1)';
+      card.style.bottom = 'auto';
+    } else {
+      const el = document.querySelector(step.target);
+      if (!el) {
+        spotlight.style.display = 'none';
+        return;
+      }
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => {
+        const rect = el.getBoundingClientRect();
+        const padding = 6;
+        spotlight.style.display = 'block';
+        spotlight.style.top = (rect.top - padding) + 'px';
+        spotlight.style.left = (rect.left - padding) + 'px';
+        spotlight.style.width = (rect.width + padding * 2) + 'px';
+        spotlight.style.height = (rect.height + padding * 2) + 'px';
+        
+        const cardW = 320;
+        let cardTop, arrowPos;
+        if (step.position === 'bottom') {
+          cardTop = rect.bottom + 12 + padding;
+          arrowPos = 'top';
+        } else {
+          cardTop = rect.top - 12 - padding - 220;
+          arrowPos = 'bottom';
+        }
+        cardTop = Math.max(80, Math.min(cardTop, window.innerHeight - 280));
+        card.style.top = cardTop + 'px';
+        card.style.left = Math.max(16, Math.min(window.innerWidth - cardW - 16, rect.left + rect.width/2 - cardW/2)) + 'px';
+        card.style.bottom = 'auto';
+        card.style.transform = 'scale(1)';
+        
+        card.classList.remove('top', 'bottom');
+        card.classList.add(arrowPos);
+        arrow.classList.remove('top', 'bottom');
+        arrow.classList.add(arrowPos);
+      }, 350);
+    }
+    
+    card.style.display = 'block';
+    requestAnimationFrame(() => card.classList.add('show'));
+  }, 50);
+}
+
+function nextTutorialStep() {
+  if (navigator.vibrate) navigator.vibrate(15);
+  if (tutorialStep >= tutorialSteps.length - 1) {
+    finishTutorial();
+    return;
+  }
+  tutorialStep++;
+  renderTutorialStep();
+}
+
+function prevTutorialStep() {
+  if (tutorialStep <= 0) return;
+  tutorialStep--;
+  renderTutorialStep();
+}
+
+function skipTutorial() {
+  if (confirm('Skip the tour? You can replay it anytime from Settings.')) {
+    finishTutorial();
+  }
+}
+
+function finishTutorial() {
+  tutorialActive = false;
+  tutorialStep = 0;
+  document.getElementById('tutorialSpotlight').style.display = 'none';
+  document.getElementById('tutorialCard').style.display = 'none';
+  document.getElementById('tutorialCard').classList.remove('show');
+  state.tutorialCompleted = true;
+  saveState();
+  if (document.querySelector('.nav-item[data-tab="today"]')) switchTab('today');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function replayTutorial() {
+  if (tutorialActive) {
+    finishTutorial();
+    setTimeout(startTutorial, 400);
+  } else {
+    startTutorial();
+  }
 }
 
 // ============================================================
@@ -3791,5 +4156,20 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 </script>
+
+<!-- Tutorial Overlay -->
+<div id="tutorialSpotlight" class="tutorial-spotlight" style="display:none;"></div>
+<div id="tutorialCard" class="tutorial-card" style="display:none;">
+  <div class="tutorial-arrow" id="tutorialArrow"></div>
+  <div class="tutorial-step-icon" id="tutorialIcon">💙</div>
+  <div class="tutorial-title" id="tutorialTitle">Welcome!</div>
+  <div class="tutorial-text" id="tutorialText">Let's show you around.</div>
+  <div class="tutorial-progress" id="tutorialProgress"></div>
+  <div class="tutorial-buttons">
+    <button class="skip" id="tutorialSkip" onclick="skipTutorial()">Skip tour</button>
+    <button class="back" id="tutorialBack" onclick="prevTutorialStep()" style="display:none;">← Back</button>
+    <button class="next" id="tutorialNext" onclick="nextTutorialStep()">Next →</button>
+  </div>
+</div>
 </body>
 </html>
