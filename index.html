@@ -1254,6 +1254,10 @@
       <label for="startDate">Start date</label>
       <input type="date" id="startDate">
     </div>
+    <div class="form-group">
+      <label style="margin-bottom: 8px;">Other health conditions <span style="font-weight:400; color:var(--text-muted); font-size:11px;">(optional, helps tailor the plan)</span></label>
+      <div id="conditionsCheckboxes" style="display:flex; flex-direction:column; gap:6px;"></div>
+    </div>
     <button class="btn-primary" id="startBtn" onclick="startApp()">Start My 30 Days →</button>
     <p style="text-align:center; font-size:12px; color:var(--text-light); margin-top:16px; font-style:italic;">Powered by <span style="color:var(--primary); font-weight:700;">Love</span> 💙<br><span style="font-size:11px;">— WithoutLoveWeAreNothing —</span></p>
   </div>
@@ -1400,6 +1404,8 @@
   
   <!-- RESOURCES TAB -->
   <div class="content tab-content" id="tab-resources">
+    <div id="conditionsBanner" style="margin-bottom: 12px;"></div>
+    
     <div class="section-title">🛒 This Week's Shopping List</div>
     
     <div class="resource-section" id="shoppingListSection" style="background: linear-gradient(135deg, var(--primary-lightest) 0%, white 100%);">
@@ -1427,29 +1433,35 @@
     <div class="section-title">Foods & Swaps</div>
     
     <div class="resource-section">
-      <h3>✅ Safe Foods</h3>
+      <h3>✅ Safe Foods (Multi-Condition Plan)</h3>
       <ul class="resource-list success">
-        <li>Pap (ogi), oatmeal, millet porridge</li>
-        <li>White rice, boiled yam, plantain, sweet potato</li>
-        <li>Fresh fish, chicken (skinless), eggs, tofu</li>
-        <li>Carrots, green beans, okra, ugwu, ewedu</li>
-        <li>Ripe banana, pawpaw, watermelon, honeydew</li>
-        <li>Avocado, coconut water, plain yogurt (nono)</li>
+        <li><strong>Carbs:</strong> Pap (ogi), oatmeal, millet porridge, white rice, boiled yam, plantain, sweet potato</li>
+        <li><strong>Proteins:</strong> Fresh fish (boiled/steamed), lean chicken (skinless), skinless turkey, eggs, tofu, beans (soft)</li>
+        <li><strong>Iron-rich additions:</strong> Lean red meat (small, well-cooked soft), beef/liver (1×/week), ugwu, ewedu, spinach (small amounts)</li>
+        <li><strong>Vegetables:</strong> Carrots, green beans, okra, pumpkin leaves (ugwu), ewedu, scent leaf</li>
+        <li><strong>Fruits:</strong> Ripe banana (best for iron + sleep), ripe pawpaw (small), honeydew melon, watermelon (chewed well)</li>
+        <li><strong>Liquids:</strong> Warm water, plain soya milk, plain yogurt (test tolerance — dairy can worsen GERD/bile reflux)</li>
+        <li><strong>Sleep-promoting evening:</strong> Warm soya milk + small honey, banana, sweet potato</li>
       </ul>
+      <p style="font-size:12px; color:var(--text-light); margin-top:8px;"><strong>Fat rule:</strong> ≤ ½ tsp oil per meal TOTAL. Olive oil preferred over palm oil. No frying. Steam/boil/grill only.</p>
     </div>
     
     <div class="resource-section">
-      <h3>❌ Avoid Strictly</h3>
+      <h3>❌ Avoid Strictly (All Conditions)</h3>
       <ul class="resource-list danger">
         <li>Pepper/chili (fresh or dry)</li>
-        <li>Onions, garlic, ginger</li>
-        <li>Maggi, Knorr, Royco, all cubes</li>
+        <li>Onions, garlic, ginger (PUD)</li>
+        <li>Maggi, Knorr, Royco, all stock cubes</li>
         <li>Tomatoes (fresh or paste), vinegar</li>
-        <li>Citrus (orange, lemon, lime)</li>
-        <li>Kuli-kuli, fried foods, palm oil in excess</li>
-        <li>Alcohol, Coke, Fanta, Sprite, coffee</li>
-        <li>Smoked fish, agbo, herbal mixtures</li>
+        <li>Citrus (orange, lemon, lime, grapefruit)</li>
+        <li>Carbonated drinks (Coke, Fanta, Sprite)</li>
+        <li>Alcohol, smoking, cigarettes</li>
+        <li>Chocolate, mint (triggers GERD)</li>
+        <li>Fried foods (GERD + bile reflux)</li>
+        <li>Coffee, strong tea (PUD + insomnia)</li>
+        <li>Smoked fish, dried meat, agbo/herbal mixtures</li>
       </ul>
+      <p style="font-size:12px; color:var(--text-light); margin-top:8px;"><strong>Critical:</strong> If you have bile reflux, AVOID all fats above ½ tsp/meal. Long gaps between meals WORSE bile reflux — never skip a meal.</p>
     </div>
     
     <div class="resource-section">
@@ -1482,43 +1494,152 @@
         <li><strong>9:30 AM</strong> — ½ ripe pawpaw</li>
         <li><strong>1:00 PM</strong> — Rice + ½ avocado (if hungry)</li>
         <li><strong>5:00 PM</strong> — Coconut water + banana</li>
-        <li><strong>8:00 PM</strong> — ½ honeydew or skip</li>
+        <li><strong>8:00 PM</strong> — ½ honeydew OR warm soya milk + small banana (sleep-friendly)</li>
       </ul>
       <p style="font-size:12px; color:var(--text-light); margin-top:8px;">Use for 1–2 days max when appetite is low.</p>
+    </div>
+    
+    <div class="section-title">Suggested Substitutions (Per Condition)</div>
+    
+    <div class="resource-section" style="border-left: 4px solid #C2185B;">
+      <h3>🩸 Iron-Boosting Alternatives</h3>
+      <p style="font-size:12px; color: var(--text-light); margin-bottom: 8px;">Swap these into your week to fight iron deficiency. Always cook soft & plain — no pepper.</p>
+      <ul class="resource-list success">
+        <li><strong>Liver (1×/week, small):</strong> Boiled & mashed — mix into rice or eat with bread. Highest iron.</li>
+        <li><strong>Lean beef (2×/week):</strong> Soft-boiled with carrot & a tiny bit of olive oil. Strip any fat.</li>
+        <li><strong>Ugwu/Ewedu/Spinach:</strong> Twice this week — pureed smooth, no pepper, tiny oil.</li>
+        <li><strong>Beans:</strong> Already in plan (moin-moin) — keep 2–3×/week.</li>
+        <li><strong>Eggs:</strong> Already daily — yolk has iron.</li>
+        <li><strong>Cooked carrots:</strong> Already in plan — iron content modest but helps.</li>
+      </ul>
+      <p style="font-size:12px; color: var(--danger); margin-top: 8px;"><strong>Iron absorption tip:</strong> Eat iron foods WITH a small piece of lean meat in the same meal — the "meat factor" boosts absorption 2–3×. (Vitamin C would help more but it's off-limits for ulcer.)</p>
+    </div>
+    
+    <div class="resource-section" style="border-left: 4px solid #673AB7;">
+      <h3>😴 Sleep-Promoting Substitutions</h3>
+      <p style="font-size:12px; color: var(--text-light); margin-bottom: 8px;">Use these for evening & nightcap meals when sleep is hard:</p>
+      <ul class="resource-list success">
+        <li><strong>Sweet potato (dinner):</strong> Boiled, mashed with tiny salt. Tryptophan precursor — helps melatonin.</li>
+        <li><strong>Warm soya milk + small honey:</strong> 30 min before bed — natural tryptophan.</li>
+        <li><strong>Banana:</strong> Has magnesium + tryptophan. Last fruit of the day.</li>
+        <li><strong>Chicken or turkey:</strong> Tryptophan-rich — good for afternoon meal.</li>
+        <li><strong>Eggs:</strong> Also tryptophan-rich — good any meal.</li>
+        <li><strong>Cooked ugwu/ewedu:</strong> Magnesium — helps relaxation.</li>
+      </ul>
+      <p style="font-size:12px; color: var(--danger); margin-top: 8px;"><strong>Sleep hygiene:</strong> No caffeine after noon. No screens 1 hr before bed. Same bedtime daily. Cool, dark bedroom.</p>
+    </div>
+    
+    <div class="resource-section" style="border-left: 4px solid #FF9800;">
+      <h3>💛 Bile Reflux — Critical Substitutions</h3>
+      <ul class="resource-list danger">
+        <li><strong>Reduce fat to ZERO if flaring</strong> — even ½ tsp oil can trigger. Use broth-only days.</li>
+        <li><strong>Broth-only reset (1 day):</strong> Chicken broth + plain rice + banana. Then re-introduce carefully.</li>
+        <li><strong>Lean protein:</strong> All visible fat removed. Skin off chicken. Fish — only the white meat (no oily fish).</li>
+        <li><strong>No "missing" oil:</strong> If a recipe needs oil, swap with extra broth.</li>
+        <li><strong>Eat within 1 hr of waking:</strong> Critical for bile flow regulation.</li>
+        <li><strong>Last meal 3+ hr before bed:</strong> Non-negotiable.</li>
+      </ul>
+    </div>
+    
+    <div class="section-title">Condition-Specific Guidance</div>
+    
+    <div class="resource-section" style="border-left: 4px solid #E91E63;">
+      <h3>🔥 If You Have GERD</h3>
+      <ul class="resource-list">
+        <li>Strictly NO food 3+ hours before bed — non-negotiable</li>
+        <li>Sleep on your <strong>LEFT side</strong> — anatomy reduces acid exposure</li>
+        <li>Head of bed elevated 6–8 inches (extra pillow or wedge)</li>
+        <li>Don't bend over after eating — keeps acid in stomach</li>
+        <li>Avoid tight clothing around waist</li>
+        <li>Chew gum (sugar-free) after meals — increases saliva, neutralizes acid</li>
+        <li>Stop eating at 80% full — extra critical for you</li>
+      </ul>
+    </div>
+    
+    <div class="resource-section" style="border-left: 4px solid #FF9800;">
+      <h3>💛 If You Have Bile Reflux</h3>
+      <ul class="resource-list">
+        <li><strong>NEVER skip meals</strong> — including breakfast. Hunger makes bile build up</li>
+        <li>Limit fat to < 30g/day TOTAL — fat triggers bile release</li>
+        <li>Eat 5 small meals (already in plan) — keeps bile flowing gently</li>
+        <li>Avoid large meals — even one big meal can trigger a flare</li>
+        <li>If you vomit, yellow/green color = bile — note for next doctor visit</li>
+        <li>Combine iron food with a small portion of meat in the SAME meal — boosts iron absorption (meat factor)</li>
+      </ul>
+    </div>
+    
+    <div class="resource-section" style="border-left: 4px solid #C2185B;">
+      <h3>🩸 If You Have Iron Deficiency</h3>
+      <ul class="resource-list">
+        <li><strong>Talk to your doctor about iron tablets.</strong> Diet alone usually isn't enough at your level</li>
+        <li>Take iron pills on an empty stomach with water (if tolerated) for best absorption</li>
+        <li>Avoid tea/coffee within 1 hour of iron pills (tannins block absorption)</li>
+        <li>Eat iron-rich foods WITH a small piece of meat in the same meal (meat factor)</li>
+        <li>Best iron sources you can have: liver (1×/week), lean red meat (soft-cooked), ugwu, ewedu, beans, eggs</li>
+        <li>Note: vitamin C (citrus) would help absorption BUT it's forbidden due to ulcer — so we rely on meat factor</li>
+        <li>Cook in cast iron pots if possible — adds small iron to food</li>
+        <li>Get a hemoglobin test every 2–3 months to track recovery</li>
+      </ul>
+    </div>
+    
+    <div class="resource-section" style="border-left: 4px solid #673AB7;">
+      <h3>😴 If You Have Insomnia</h3>
+      <ul class="resource-list">
+        <li><strong>No caffeine after noon</strong> (even tea, cocoa)</li>
+        <li><strong>No screens 1 hour before bed</strong> (use night mode if you must)</li>
+        <li>Final meal of day: try warm soya milk + small honey + banana (tryptophan + complex carb)</li>
+        <li>Sweet potato at dinner is sleep-promoting (tryptophan precursor)</li>
+        <li>Sleep schedule: same bedtime/wake time every day, even weekends</li>
+        <li>Keep bedroom cool (18–20°C), dark, quiet</li>
+        <li>If awake > 20 min, get up & read in dim light — don't stay in bed frustrated</li>
+        <li>Magnesium-rich foods (ugwu, ewedu, banana, beans) help sleep</li>
+        <li>Avoid napping after 3 PM if it affects night sleep</li>
+      </ul>
     </div>
     
     <div class="section-title">Critical Reminders</div>
     
     <div class="warning-box">
       <strong>🚨 Go to hospital if you have:</strong>
-      <p>• Black, tarry stool (bleeding)<br>• Vomiting blood or "coffee grounds"<br>• Severe pain that won't stop<br>• Sudden weight loss >3kg/month<br>• Difficulty swallowing</p>
+      <p>• Black, tarry stool (digestive bleeding)<br>
+      • Vomiting blood or "coffee grounds"<br>
+      • Vomiting yellow/green fluid repeatedly (bile reflux flare)<br>
+      • Severe pain that won't stop<br>
+      • Sudden weight loss >3kg/month<br>
+      • Difficulty swallowing (food sticks in chest)<br>
+      • Chest pain that mimics a heart attack<br>
+      • Yellow skin or eyes (jaundice — possible bile duct issue)<br>
+      • Extreme fatigue + pale skin + shortness of breath (severe anemia)<br>
+      • Persistent insomnia despite following the plan for 2+ weeks</p>
     </div>
     
     <div class="resource-section">
-      <h3>💊 Medical Rules</h3>
+      <h3>💊 Medical Rules (All Conditions)</h3>
       <ul class="resource-list">
-        <li>Take antacids as prescribed</li>
-        <li>Get tested for H. pylori</li>
-        <li>Complete triple/quadruple therapy if positive</li>
-        <li>No NSAIDs (ibuprofen, diclofenac) — use paracetamol only</li>
-        <li>No smoking or alcohol</li>
-        <li>No agbo or herbal mixtures</li>
-        <li>Review with doctor every 2 weeks</li>
-        <li>Sleep with head raised 6–8 inches</li>
-        <li>Wait 3 hours after eating before lying down</li>
+        <li>Take all prescribed meds on time (PPIs, antacids, iron, etc.)</li>
+        <li>Get tested for H. pylori — if positive, complete triple/quadruple therapy</li>
+        <li>No NSAIDs (ibuprofen, diclofenac) — paracetamol only for pain</li>
+        <li>No smoking, no alcohol, no agbo/herbal mixtures</li>
+        <li>See a gastroenterologist — your condition stack (PUD + GERD + bile reflux + anemia + insomnia) needs specialist care, not just diet</li>
+        <li>Review with doctor every 2 weeks during recovery</li>
+        <li>Get a full blood count (FBC) every 2–3 months to track iron/B12 levels</li>
       </ul>
     </div>
     
     <div class="resource-section">
-      <h3>🍽️ Daily Eating Rules</h3>
+      <h3>🍽️ Daily Eating Rules (Multi-Condition)</h3>
       <ul class="resource-list">
-        <li>Chew every bite 20–30 times (until liquid)</li>
+        <li><strong>Chewing:</strong> Every bite 20–30 times until liquid</li>
+        <li><strong>Never skip meals</strong> — critical for bile reflux</li>
         <li>Stop at 80% full — never finish the plate</li>
         <li>Eat freshly cooked food only — no leftovers</li>
         <li>No water 30 min before or 1 hour after meals</li>
-        <li>Sip 6–8 glasses of warm water daily</li>
-        <li>Eat fruit alone, never with other food</li>
+        <li>Sip 6–8 glasses of warm water daily (between meals)</li>
+        <li>Eat fruit alone, never with other food (digestion clash)</li>
         <li>Fruit must be ripe, room temperature</li>
+        <li>Sleep position: <strong>LEFT side</strong>, head raised 6–8"</li>
+        <li>Last food of day ≥ 3 hours before bed (strict for GERD)</li>
+        <li>Limit fat to < ½ tsp oil per meal TOTAL — no frying</li>
       </ul>
     </div>
   </div>
@@ -2264,6 +2385,7 @@ const defaultDayState = () => ({
 
 const defaultState = () => ({
   user: { name: '', startDate: '', adminPhone: '2348157102237', customPrepTimes: {}, bedtime: '22:00', customMealTimes: {} },
+  conditions: { pud: true, gerd: false, bileReflux: false, insomnia: false, ironDeficiency: false },
   days: {},
   lastSharedDate: '',
   shoppingChecked: {},
@@ -2272,6 +2394,14 @@ const defaultState = () => ({
   alarmTimers: {},
   tutorialCompleted: false
 });
+
+const CONDITIONS_INFO = {
+  pud: { name: 'PUD (Peptic Ulcer)', icon: '🔴', desc: 'Open sores in stomach/duodenum lining' },
+  gerd: { name: 'GERD (Acid Reflux)', icon: '🔥', desc: 'Stomach acid flowing back into esophagus' },
+  bileReflux: { name: 'Bile Reflux Gastritis', icon: '💛', desc: 'Bile backing up into stomach & esophagus' },
+  insomnia: { name: 'Insomnia', icon: '😴', desc: 'Difficulty falling or staying asleep' },
+  ironDeficiency: { name: 'Iron Deficiency', icon: '🩸', desc: 'Low iron levels / anemia' }
+};
 
 const MEAL_TIME_RULES = {
   noEarlierThanMorning: '05:00',
@@ -2353,7 +2483,45 @@ function init() {
     state = defaultState();
     const dateInput = document.getElementById('startDate');
     if (!dateInput.value) dateInput.value = todayDate();
+    renderConditionCheckboxes();
   }
+}
+
+function renderConditionCheckboxes() {
+  const container = document.getElementById('conditionsCheckboxes');
+  if (!container) return;
+  const checked = (state && state.conditions) ? state.conditions : { pud: true };
+  container.innerHTML = Object.entries(CONDITIONS_INFO).map(([key, info]) => {
+    const isChecked = checked[key] ? 'checked' : '';
+    return `
+      <label style="display:flex; align-items:center; gap:10px; padding:8px 10px; background: ${isChecked ? 'var(--primary-lightest)' : 'white'}; border: 2px solid ${isChecked ? 'var(--primary)' : 'var(--primary-lighter)'}; border-radius: 10px; cursor:pointer; font-size: 13px;">
+        <input type="checkbox" data-cond="${key}" ${isChecked} style="width:18px; height:18px; accent-color: var(--primary);">
+        <span style="font-size:20px;">${info.icon}</span>
+        <span style="flex:1;"><strong style="color: var(--primary-darker);">${info.name}</strong><br><span style="font-size:11px; color: var(--text-light);">${info.desc}</span></span>
+      </label>
+    `;
+  }).join('');
+  
+  container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const label = cb.parentElement;
+      if (cb.checked) {
+        label.style.background = 'var(--primary-lightest)';
+        label.style.borderColor = 'var(--primary)';
+      } else {
+        label.style.background = 'white';
+        label.style.borderColor = 'var(--primary-lighter)';
+      }
+    });
+  });
+}
+
+function getSelectedConditions() {
+  const out = { pud: true };
+  document.querySelectorAll('#conditionsCheckboxes input[type=checkbox]').forEach(cb => {
+    out[cb.dataset.cond] = cb.checked;
+  });
+  return out;
 }
 
 function startApp() {
@@ -2365,6 +2533,7 @@ function startApp() {
   state = defaultState();
   state.user.name = name;
   state.user.startDate = startDate;
+  state.conditions = getSelectedConditions();
   saveState();
   
   document.getElementById('onboarding').style.display = 'none';
@@ -2394,6 +2563,64 @@ function renderApp() {
   updateNextMealDisplay();
   scheduleAllAlarms();
   checkSharePrompt();
+  renderConditionsBanner();
+  applyConditionReminders();
+}
+
+function renderConditionsBanner() {
+  const banner = document.getElementById('conditionsBanner');
+  if (!banner) return;
+  const conds = state.conditions || {};
+  const active = Object.entries(conds).filter(([k,v]) => v).map(([k]) => CONDITIONS_INFO[k]);
+  if (active.length === 0) {
+    banner.innerHTML = '';
+    return;
+  }
+  const summary = active.map(c => `${c.icon} <strong>${c.name}</strong>`).join(' · ');
+  const extras = active.filter(c => c.name !== 'PUD (Peptic Ulcer)').length;
+  if (extras === 0) {
+    banner.innerHTML = `<div style="background:var(--primary-lightest); border-left:4px solid var(--primary); border-radius:10px; padding:10px 14px; font-size:13px;">📋 Active care plan: ${summary}</div>`;
+    return;
+  }
+  banner.innerHTML = `
+    <div style="background: linear-gradient(135deg, #FCE4EC 0%, var(--primary-lightest) 100%); border-left: 4px solid #E91E63; border-radius: 10px; padding: 12px 14px; font-size: 13px;">
+      <div style="margin-bottom:6px;">📋 <strong>Active conditions:</strong> ${summary}</div>
+      <div style="color: var(--text-light); font-size:12px;">Multi-condition plan active — see the <strong>Condition-Specific Guidance</strong> section below for tailored rules. 🩺 A gastroenterologist is essential for your condition stack.</div>
+    </div>
+  `;
+}
+
+function applyConditionReminders() {
+  const conds = state.conditions || {};
+  
+  if (conds.bileReflux) {
+    const dayState = getDayState(getCurrentDay());
+    const allEaten = Object.values(dayState.meals).every(m => m.eaten);
+    const hasUnchecked = !allEaten;
+    const phase = getCurrentDay() - 1;
+    if (hasUnchecked && phase >= 0 && phase < 30 && (new Date().getHours() >= 11) && !allEaten) {
+      const eatenCount = Object.values(dayState.meals).filter(m => m.eaten).length;
+      if (eatenCount === 0) {
+        showToast('⚠️ Bile reflux: don\'t skip meals — eat something gentle now');
+      }
+    }
+  }
+  
+  if (conds.gerd && state.lastSharedDate === todayDate()) {
+    const hour = new Date().getHours();
+    if (hour >= 18 && hour < 21) {
+      const lastMealId = 'nightcap';
+      const dayState = getDayState(getCurrentDay());
+      if (!dayState.meals[lastMealId].eaten) {
+        const bedtimeMins = timeToMinutes(state.user.bedtime || '22:00');
+        const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
+        const gap = bedtimeMins - nowMins;
+        if (gap < 180 && gap > 0) {
+          showToast(`🔥 GERD: only ${gap} min until bedtime — last food should already be done`);
+        }
+      }
+    }
+  }
 }
 
 function renderQuote() {
@@ -2666,9 +2893,15 @@ function generateDailyReport() {
   const ySymptoms = getYesterdayComparison('symptoms');
   const yEnergy = getYesterdayComparison('energy');
   
+  const activeConditions = Object.entries(state.conditions || {}).filter(([k,v]) => v).map(([k]) => CONDITIONS_INFO[k]);
+  
   let report = `🌊 *Ulcer Plan — Day ${dayNum} of 30*\n`;
   report += `📅 ${dateStr}\n`;
-  report += `👤 ${name}\n\n`;
+  report += `👤 ${name}\n`;
+  if (activeConditions.length > 0) {
+    report += `🩺 Tracking: ${activeConditions.map(c => c.name).join(', ')}\n`;
+  }
+  report += `\n`;
   
   report += `📊 *Overall Progress*\n`;
   report += `✅ Days completed: ${daysDone}/30\n`;
@@ -3323,6 +3556,9 @@ function renderSettings() {
   const alarmsLabel = state.alarmsEnabled ? '🔔 ON' : '🔕 OFF';
   const permStatus = ('Notification' in window) ? Notification.permission : 'unsupported';
   
+  const activeConds = Object.entries(state.conditions).filter(([k,v]) => v && k !== 'pud').map(([k]) => CONDITIONS_INFO[k].icon).join(' ');
+  const conditionsDesc = activeConds ? `${activeConds} · tap to edit` : 'PUD only · tap to add more';
+  
   let installButton = '';
   if (isAppInstalled) {
     installButton = `
@@ -3359,6 +3595,13 @@ function renderSettings() {
       <div class="setting-text">
         <div class="setting-title">Name</div>
         <div class="setting-desc">${state.user.name}</div>
+      </div>
+    </button>
+    <button class="setting-item" onclick="editConditions()" style="border-left: 4px solid #E91E63;">
+      <div class="setting-icon" style="background: #FCE4EC;">🩺</div>
+      <div class="setting-text">
+        <div class="setting-title">Health conditions</div>
+        <div class="setting-desc">${conditionsDesc}</div>
       </div>
     </button>
     <button class="setting-item" onclick="editStartDate()">
@@ -3645,6 +3888,50 @@ function editName() {
   }
 }
 
+function editConditions() {
+  const conds = state.conditions;
+  const html = Object.entries(CONDITIONS_INFO).map(([key, info]) => {
+    const isChecked = conds[key] ? 'checked' : '';
+    return `
+      <label style="display:flex; align-items:center; gap:10px; padding:8px 10px; background: ${isChecked ? 'var(--primary-lightest)' : 'white'}; border: 2px solid ${isChecked ? 'var(--primary)' : 'var(--primary-lighter)'}; border-radius: 10px; margin: 6px 0; cursor:pointer; font-size: 13px;">
+        <input type="checkbox" data-cond="${key}" ${isChecked} style="width:18px; height:18px; accent-color: var(--primary);" onclick="updateConditionCheckbox(this)">
+        <span style="font-size:20px;">${info.icon}</span>
+        <span style="flex:1;"><strong style="color: var(--primary-darker);">${info.name}</strong><br><span style="font-size:11px; color: var(--text-light);">${info.desc}</span></span>
+      </label>
+    `;
+  }).join('');
+  
+  showModal('🩺 Manage Health Conditions', `
+    <p style="font-size:13px;">Select all that apply. The meal plan, rules, and food lists will adjust automatically.</p>
+    <div id="editCondsList">${html}</div>
+    <p style="font-size:12px; color: var(--text-light); margin-top:10px;">⚠️ PUD is always on for this app.</p>
+  `, [
+    { label: 'Save', class: 'btn-primary', action: 'saveConditions()' }
+  ]);
+}
+
+function updateConditionCheckbox(cb) {
+  const label = cb.parentElement;
+  if (cb.checked) {
+    label.style.background = 'var(--primary-lightest)';
+    label.style.borderColor = 'var(--primary)';
+  } else {
+    label.style.background = 'white';
+    label.style.borderColor = 'var(--primary-lighter)';
+  }
+}
+
+function saveConditions() {
+  state.conditions = { pud: true };
+  document.querySelectorAll('#editCondsList input[type=checkbox]').forEach(cb => {
+    state.conditions[cb.dataset.cond] = cb.checked;
+  });
+  saveState();
+  closeModal();
+  renderSettings();
+  showToast('✓ Conditions updated');
+}
+
 function editStartDate() {
   const newDate = prompt('Enter new start date (YYYY-MM-DD):', state.user.startDate);
   if (newDate && /^\d{4}-\d{2}-\d{2}$/.test(newDate)) {
@@ -3694,7 +3981,10 @@ function switchTab(tab) {
   document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
   if (navigator.vibrate) navigator.vibrate(10);
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  if (tab === 'resources') renderShoppingList();
+  if (tab === 'resources') {
+    renderShoppingList();
+    renderConditionsBanner();
+  }
 }
 
 // ============================================================
